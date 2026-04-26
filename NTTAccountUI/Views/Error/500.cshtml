@@ -1,0 +1,31 @@
+﻿@{
+    ViewData["Title"] = "Sunucu Hatası";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    .error_page {
+        min-height: 100vh;
+        background-image: url('/img/500.png');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        padding-bottom: 80px;
+    }
+
+    .error_btn_wrap {
+        text-align: center;
+    }
+
+        .error_btn_wrap a {
+            margin: 0 10px;
+        }
+</style>
+<div class="error_page">
+    <div class="error_btn_wrap">
+        <a href="/" class="btn_1">Ana Sayfaya Dön</a>
+        <a href="javascript:history.back()" class="btn_1">Geri Git</a>
+    </div>
+</div>

@@ -1,0 +1,335 @@
+﻿@model NTTAccountUI.Models.ViewModels.UserProfileViewModel
+
+@{
+    ViewData["Title"] = "Profilim";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show mb-4">
+        <i class="mdi mdi-check-circle mr-2"></i> @TempData["Success"]
+        <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show mb-4">
+        <i class="mdi mdi-alert-circle mr-2"></i> @TempData["Error"]
+        <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+    </div>
+}
+@if (!ViewData.ModelState.IsValid && ViewData.ModelState.ErrorCount > 0)
+{
+    <div class="alert alert-danger mb-4">
+        <i class="mdi mdi-alert-circle mr-2"></i>
+        @Html.ValidationSummary(false)
+    </div>
+}
+
+<form asp-action="UpdateUser" asp-controller="Profile"
+      method="post" enctype="multipart/form-data" id="profileForm">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="ProfileImage" id="ProfileImageBase64" />
+
+    <div class="row">
+
+        <!-- Sol - Profil Kartı -->
+        <div class="col-lg-4 mb-4">
+
+            <!-- Profil Fotoğrafı -->
+            <div class="card mb-4" style="background:linear-gradient(135deg,#1a1a2e,#16213e);border:1px solid #2a2a4a;">
+                <div class="card-body text-center py-4">
+
+                    <div style="position:relative;display:inline-block;margin-bottom:16px;">
+                        @if (!string.IsNullOrEmpty(Model.ProfileImage))
+                        {
+                            <img src="@Model.ProfileImage" id="profilePreview"
+                                 style="width:110px;height:110px;border-radius:50%;object-fit:cover;border:3px solid #e84545;" />
+                        }
+                        else
+                        {
+                            <div id="profilePreview"
+                                 style="width:110px;height:110px;border-radius:50%;background:linear-gradient(135deg,#e84545,#c62a88);display:flex;align-items:center;justify-content:center;">
+                                <i class="mdi mdi-account" style="font-size:50px;color:#fff;"></i>
+                            </div>
+                        }
+                        <!-- Fotoğraf değiştir butonu -->
+                        <label for="profileImageInput"
+                               style="position:absolute;bottom:0;right:0;width:30px;height:30px;background:#e84545;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;border:2px solid #111118;">
+                            <i class="mdi mdi-camera" style="font-size:14px;color:#fff;"></i>
+                        </label>
+                        <input type="file" id="profileImageInput" accept="image/*" style="display:none;" />
+                    </div>
+
+                    <h5 style="color:#fff;margin-bottom:4px;">@Model.Email</h5>
+                    <span class="badge badge-info mb-3">Kullanıcı</span>
+
+                    <div style="background:rgba(255,255,255,0.05);border-radius:8px;padding:12px;margin-top:8px;text-align:left;">
+                        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.06);">
+                            <span class="text-muted small">Durum</span>
+                            @if (Model.IsActive)
+                            {
+                                <span class="badge badge-success">Aktif</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-secondary">Pasif</span>
+                            }
+                        </div>
+                        <div style="display:flex;justify-content:space-between;padding:6px 0;">
+                            <span class="text-muted small">Rol</span>
+                            <span style="color:#ccc;font-size:12px;">@(Model.RoleId == 1 ? "Admin" : "User")</span>
+                        </div>
+                    </div>
+
+                    <small class="text-muted d-block mt-3">
+                        <i class="mdi mdi-camera mr-1"></i> Fotoğrafı değiştirmek için üstüne tıklayın
+                    </small>
+                </div>
+            </div>
+
+            <!-- Kaydet Butonu -->
+            <div class="card" style="border:1px solid #2a2a4a;">
+                <div class="card-body">
+                    <button type="submit" id="saveBtn" class="btn btn-primary btn-block">
+                        <i class="mdi mdi-content-save mr-1"></i> Değişiklikleri Kaydet
+                    </button>
+                    <a href="/AdminHome" class="btn btn-outline-secondary btn-block mt-2">
+                        <i class="mdi mdi-arrow-left mr-1"></i> Geri Dön
+                    </a>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Sağ - Düzenleme Formu -->
+        <div class="col-lg-8">
+
+            <!-- Hesap Bilgileri (salt okunur) -->
+            <div class="card mb-4" style="border:1px solid #2a2a4a;">
+                <div class="card-body">
+                    <h5 class="card-title" style="color:#fff;">
+                        <i class="mdi mdi-information-outline text-muted mr-2"></i>Hesap Bilgileri
+                    </h5>
+                    <p class="text-muted small mb-3">Bu bilgiler değiştirilemez.</p>
+
+                    <div class="form-group row mb-2">
+                        <label class="col-sm-3 col-form-label text-muted small">Email</label>
+                        <div class="col-sm-9">
+                            <div style="background:#0d0d1a;border:1px solid #1e1e30;border-radius:4px;padding:10px 14px;color:#777;font-size:13px;display:flex;align-items:center;gap:8px;">
+                                <i class="mdi mdi-email-outline" style="color:#444;"></i>
+                                @Model.Email
+                                <i class="mdi mdi-lock text-muted ml-auto" style="font-size:12px;"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group row mb-0">
+                        <label class="col-sm-3 col-form-label text-muted small">Rol</label>
+                        <div class="col-sm-9">
+                            <div style="background:#0d0d1a;border:1px solid #1e1e30;border-radius:4px;padding:10px 14px;color:#777;font-size:13px;display:flex;align-items:center;gap:8px;">
+                                <i class="mdi mdi-shield-account-outline" style="color:#444;"></i>
+                                @(Model.RoleId == 1 ? "Admin" : "Kullanıcı")
+                                <i class="mdi mdi-lock text-muted ml-auto" style="font-size:12px;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Şifre Değiştir -->
+            <div class="card mb-4" style="border:1px solid #2a2a4a;">
+                <div class="card-body">
+                    <h5 class="card-title" style="color:#fff;">
+                        <i class="mdi mdi-lock-outline text-muted mr-2"></i>Şifre Değiştir
+                    </h5>
+                    <p class="text-muted small mb-3">Boş bırakırsanız şifreniz değişmez.</p>
+
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label" style="color:#aaa;font-size:13px;">Yeni Şifre</label>
+                        <div class="col-sm-9">
+                            <div style="position:relative;">
+                                <input asp-for="NewPassword" type="password" class="form-control"
+                                       id="passwordInput" placeholder="En az 8 karakter"
+                                       autocomplete="new-password" style="padding-left:40px;" />
+                                <span id="togglePwd" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:#666;z-index:10;">
+                                    <i class="mdi mdi-eye" id="eyeIcon"></i>
+                                </span>
+                            </div>
+                            <span asp-validation-for="NewPassword" class="text-danger small"></span>
+                            <span id="pwdRuleError" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group row mb-0">
+                        <label class="col-sm-3 col-form-label" style="color:#aaa;font-size:13px;">Tekrar</label>
+                        <div class="col-sm-9">
+                            <div style="position:relative;">
+                                <input asp-for="ConfirmPassword" type="password" class="form-control"
+                                       id="confirmInput" placeholder="Şifreyi tekrar girin"
+                                       autocomplete="new-password" style="padding-left:40px;" />
+                                <span id="toggleConfirm" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:#666;z-index:10;">
+                                    <i class="mdi mdi-eye" id="eyeIconConfirm"></i>
+                                </span>
+                            </div>
+                            <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                            <span id="pwdMatchError" class="text-danger small" style="display:none;">Şifreler eşleşmiyor.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Not -->
+            <div class="card" style="border:1px solid #2a2a4a;">
+                <div class="card-body">
+                    <h5 class="card-title" style="color:#fff;">
+                        <i class="mdi mdi-note-outline text-muted mr-2"></i>Notum
+                    </h5>
+                    <p class="text-muted small mb-3">Kendiniz hakkında bir not bırakabilirsiniz.</p>
+
+                    <textarea asp-for="Note" class="form-control" rows="4"
+                              placeholder="Kendiniz hakkında kısa bir not..."></textarea>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</form>
+@section Scripts {
+    <script>
+        // Şifre göster/gizle
+        function togglePassword(inputId, iconId) {
+            var input = document.getElementById(inputId);
+            var icon  = document.getElementById(iconId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.replace('mdi-eye', 'mdi-eye-off');
+            } else {
+                input.type = 'password';
+                icon.classList.replace('mdi-eye-off', 'mdi-eye');
+            }
+        }
+
+        document.getElementById('togglePwd').addEventListener('click', function () {
+            togglePassword('passwordInput', 'eyeIcon');
+        });
+
+        document.getElementById('toggleConfirm').addEventListener('click', function () {
+            togglePassword('confirmInput', 'eyeIconConfirm');
+        });
+
+        // Şifre eşleşme anlık kontrol
+        document.getElementById('confirmInput').addEventListener('input', function () {
+            var pwd     = document.getElementById('passwordInput').value;
+            var confirm = this.value;
+            var errEl   = document.getElementById('pwdMatchError');
+            if (confirm && pwd !== confirm) {
+                errEl.style.display = 'block';
+                this.classList.add('is-invalid');
+                this.classList.remove('is-valid');
+            } else {
+                errEl.style.display = 'none';
+                this.classList.remove('is-invalid');
+                if (confirm && pwd === confirm) this.classList.add('is-valid');
+            }
+        });
+
+        // Şifre kural anlık kontrol
+        document.getElementById('passwordInput').addEventListener('input', function () {
+            var pwd    = this.value;
+            var errEl  = document.getElementById('pwdRuleError');
+            if (!errEl) return;
+            if (!pwd) { errEl.textContent = ''; this.classList.remove('is-invalid','is-valid'); return; }
+
+            var msg = '';
+            if (pwd.length < 8 || pwd.length > 64)      msg = 'Şifre 8-64 karakter arasında olmalıdır.';
+            else if (!/[A-Z]/.test(pwd))                  msg = 'Şifre en az bir büyük harf içermelidir.';
+            else if (!/[a-z]/.test(pwd))                  msg = 'Şifre en az bir küçük harf içermelidir.';
+            else if (!/[0-9]/.test(pwd))                  msg = 'Şifre en az bir rakam içermelidir.';
+
+            if (msg) {
+                errEl.textContent = msg;
+                this.classList.add('is-invalid');
+                this.classList.remove('is-valid');
+            } else {
+                errEl.textContent = '';
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            }
+        });
+
+        // Profil fotoğrafı önizleme
+        document.getElementById('profileImageInput').addEventListener('change', function () {
+            var file = this.files[0];
+            if (!file) return;
+            if (!file.type.startsWith('image/')) {
+                Swal.fire({ title: 'Geçersiz Dosya!', text: 'Sadece resim yükleyebilirsiniz.',
+                    icon: 'error', confirmButtonColor: '#e84545', background: '#1a1a2e', color: '#fff' });
+                this.value = ''; return;
+            }
+            if (file.size > 2 * 1024 * 1024) {
+                Swal.fire({ title: 'Dosya Çok Büyük!', text: '2MB\'dan büyük olamaz.',
+                    icon: 'warning', confirmButtonColor: '#e84545', background: '#1a1a2e', color: '#fff' });
+                this.value = ''; return;
+            }
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                var base64  = e.target.result;
+                var preview = document.getElementById('profilePreview');
+                if (preview.tagName === 'IMG') {
+                    preview.src = base64;
+                } else {
+                    var img    = document.createElement('img');
+                    img.id     = 'profilePreview';
+                    img.src    = base64;
+                    img.style.cssText = 'width:110px;height:110px;border-radius:50%;object-fit:cover;border:3px solid #e84545;';
+                    preview.parentNode.replaceChild(img, preview);
+                }
+                document.getElementById('ProfileImageBase64').value = base64;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // Submit — tüm validasyon
+        document.getElementById('profileForm').addEventListener('submit', function (e) {
+            var isValid = true;
+            var pwd     = document.getElementById('passwordInput').value;
+            var confirm = document.getElementById('confirmInput').value;
+            var errEl   = document.getElementById('pwdRuleError');
+            var matchEl = document.getElementById('pwdMatchError');
+
+            if (pwd) {
+                var msg = '';
+                if (pwd.length < 8 || pwd.length > 64)
+                    msg = 'Şifre 8-64 karakter arasında olmalıdır.';
+                else if (!/[A-Z]/.test(pwd))
+                    msg = 'Şifre en az bir büyük harf içermelidir.';
+                else if (!/[a-z]/.test(pwd))
+                    msg = 'Şifre en az bir küçük harf içermelidir.';
+                else if (!/[0-9]/.test(pwd))
+                    msg = 'Şifre en az bir rakam içermelidir.';
+
+                if (msg) {
+                    e.preventDefault();
+                    errEl.textContent = msg;
+                    document.getElementById('passwordInput').classList.add('is-invalid');
+                    isValid = false;
+                }
+
+                if (pwd !== confirm) {
+                    e.preventDefault();
+                    matchEl.style.display = 'block';
+                    document.getElementById('confirmInput').classList.add('is-invalid');
+                    isValid = false;
+                }
+            }
+
+            if (isValid) {
+                var btn = document.getElementById('saveBtn');
+                btn.disabled = true;
+                btn.innerHTML = '<i class="mdi mdi-loading mdi-spin mr-1"></i> Kaydediliyor...';
+            }
+        });
+    </script>
+}

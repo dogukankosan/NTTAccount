@@ -1,0 +1,253 @@
+﻿@model IEnumerable<NTTAccountUI.Models.Entities.Contact>
+@using NTTAccountUI.Helpers
+
+@{
+    ViewData["Title"] = "İletişim Mesajları";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var unread = Model.Count(x => !x.IsRead);
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show mb-4">
+        <i class="mdi mdi-check-circle mr-2"></i> @TempData["Success"]
+        <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show mb-4">
+        <i class="mdi mdi-alert-circle mr-2"></i> @TempData["Error"]
+        <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+    </div>
+}
+
+<div class="row mb-4">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <h4 class="mb-0" style="color:#fff;">
+            İletişim Mesajları
+            <span class="badge badge-warning ml-2">@Model.Count() Toplam</span>
+            @if (unread > 0)
+            {
+                <span class="badge badge-danger ml-1">@unread Okunmamış</span>
+            }
+        </h4>
+    </div>
+</div>
+
+<!-- Filtre -->
+<div class="card mb-4">
+    <div class="card-body py-3">
+        <div class="row align-items-center">
+            <div class="col-md-4">
+                <input type="text" id="searchInput" class="form-control" placeholder="Ad, telefon, konu veya mesaj ara...">
+            </div>
+            <div class="col-md-3">
+                <select id="statusFilter" class="form-control">
+                    <option value="">Tüm Durumlar</option>
+                    <option value="okunmadi">Okunmadı</option>
+                    <option value="okundu">Okundu</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button class="btn btn-outline-secondary btn-block" id="clearFilter">
+                    <i class="mdi mdi-close mr-1"></i> Temizle
+                </button>
+            </div>
+            <div class="col-md-2 text-right">
+                <span class="text-muted small" id="resultCount"></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table" id="contactTable">
+                <thead>
+                    <tr>
+                        <th>Ad Soyad</th>
+                        <th>Telefon</th>
+                        <th>Konu</th>
+                        <th>Mesaj</th>
+                        <th>IP</th>
+                        <th>Tarih</th>
+                        <th style="width:90px;">Durum</th>
+                        <th style="width:110px;">İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-4">Henüz mesaj yok.</td>
+                        </tr>
+                    }
+                    @foreach (var contact in Model)
+                    {
+                     
+                            var rawPhone    = contact.Phone ?? "";
+                            var displayPhone = rawPhone;
+                            if (rawPhone.StartsWith("+90") && rawPhone.Length >= 13)
+                            {
+                                var digits = rawPhone.Substring(3);
+                                displayPhone = "+90 " + digits.Substring(0,3) + " " + digits.Substring(3,3) + " " + digits.Substring(6,2) + " " + digits.Substring(8,2);
+                            }
+                            var waNumber = rawPhone.Replace("+","").Replace(" ","");
+                      
+                        <tr style="@(!contact.IsRead ? "background:rgba(232,69,69,0.05);" : "")"
+                            data-status="@(contact.IsRead ? "okundu" : "okunmadi")"
+                            data-search="@($"{contact.FullName} {contact.Phone} {contact.Subject} {contact.Message}".ToLower())">
+
+                            <td style="color:#fff; font-weight:@(!contact.IsRead ? "600" : "normal")">
+                                @contact.FullName
+                            </td>
+                            <td>
+                                <a href="https://wa.me/@waNumber" target="_blank"
+                                   class="text-success" title="WhatsApp'ta Aç"
+                                   style="white-space:nowrap;text-decoration:none;">
+                                    <i class="mdi mdi-whatsapp mr-1"></i>@displayPhone
+                                </a>
+                            </td>
+                            <td class="text-muted" style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
+                                title="@contact.Subject">
+                                @contact.Subject
+                            </td>
+                            <td>
+                                <span class="text-muted" style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;">
+                                    @contact.Message
+                                </span>
+                                <a href="#" class="text-primary small"
+                                   onclick="showMessage('@contact.FullName', '@Html.Raw(contact.Subject)', '@Html.Raw(contact.Message.Replace("'","\\'").Replace("\n","\\n"))'); return false;">
+                                    Tümünü Gör
+                                </a>
+                            </td>
+                            <td class="text-muted small">@contact.IpAddress</td>
+                            <td class="text-muted small">@contact.CreatedAt.ToTurkeyTimeString()</td>
+                            <td>
+                                @if (contact.IsRead)
+                                {
+                                    <span class="badge badge-success">Okundu</span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-warning">Okunmadı</span>
+                                }
+                            </td>
+                            <td>
+                                <form asp-action="ToggleRead" asp-controller="AdminContact"
+                                      method="post" style="display:inline;">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@contact.Id" />
+                                    <button type="submit"
+                                            class="btn btn-sm @(contact.IsRead ? "btn-outline-warning" : "btn-outline-success") mr-1"
+                                            title="@(contact.IsRead ? "Okunmadı İşaretle" : "Okundu İşaretle")">
+                                        <i class="mdi @(contact.IsRead ? "mdi-email-outline" : "mdi-email-open-outline")"></i>
+                                    </button>
+                                </form>
+
+                                <form asp-action="Delete" asp-controller="AdminContact"
+                                      method="post" style="display:inline;"
+                                      class="delete-form" data-name="@contact.FullName">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@contact.Id" />
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Sil">
+                                        <i class="mdi mdi-delete"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <p class="text-muted small mt-2" id="noResult" style="display:none;">
+                <i class="mdi mdi-magnify mr-1"></i> Arama sonucu bulunamadı.
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Mesaj Detay Modal -->
+<div class="modal fade" id="messageModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background:#1a1a2e;border:1px solid #2a2a4a;">
+            <div class="modal-header" style="border-color:#2a2a4a;">
+                <h5 class="modal-title" id="modalTitle" style="color:#fff;"></h5>
+                <button type="button" class="close" data-dismiss="modal" style="color:#fff;"><span>&times;</span></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted small mb-1" id="modalSubject"></p>
+                <p style="color:#ccc;line-height:1.8;white-space:pre-line;" id="modalMessage"></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Mesaj detay
+        function showMessage(name, subject, message) {
+            document.getElementById('modalTitle').textContent = name;
+            document.getElementById('modalSubject').textContent = 'Konu: ' + subject;
+            document.getElementById('modalMessage').textContent = message.replace(/\\n/g, '\n');
+            $('#messageModal').modal('show');
+        }
+
+        // Filtreleme
+        function filterTable() {
+            var search = $('#searchInput').val().toLowerCase();
+            var status = $('#statusFilter').val();
+            var count  = 0;
+
+            $('#contactTable tbody tr').each(function () {
+                var rowSearch = $(this).data('search') || '';
+                var rowStatus = $(this).data('status') || '';
+
+                var matchSearch = !search || rowSearch.includes(search);
+                var matchStatus = !status || rowStatus === status;
+
+                if (matchSearch && matchStatus) {
+                    $(this).show();
+                    count++;
+                } else {
+                    $(this).hide();
+                }
+            });
+
+            $('#noResult').toggle(count === 0);
+            $('#resultCount').text(count > 0 ? count + ' kayıt' : '');
+        }
+
+        $('#searchInput, #statusFilter').on('input change', filterTable);
+
+        $('#clearFilter').on('click', function () {
+            $('#searchInput').val('');
+            $('#statusFilter').val('');
+            filterTable();
+        });
+
+        // SweetAlert2 silme
+        document.querySelectorAll('.delete-form').forEach(function (form) {
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                var name = this.getAttribute('data-name');
+                var submitForm = this;
+                Swal.fire({
+                    title: 'Emin misiniz?',
+                    text: '"' + name + '" kişisinin mesajı silinecek!',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#e84545',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Evet, Sil!',
+                    cancelButtonText: 'İptal',
+                    background: '#1a1a2e',
+                    color: '#fff'
+                }).then(function (result) {
+                    if (result.isConfirmed) submitForm.submit();
+                });
+            });
+        });
+    </script>
+}

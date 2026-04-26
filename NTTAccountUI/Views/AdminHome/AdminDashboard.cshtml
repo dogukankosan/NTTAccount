@@ -1,0 +1,256 @@
+﻿@using NTTAccountUI.Helpers
+@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h4 style="color:#fff;">
+            Hoş Geldiniz, <span style="color:#e84545;">@(ViewBag.AdminEmail ?? "Admin")</span>
+        </h4>
+        <p class="text-muted small">@DateTime.Now.ToString("dd MMMM yyyy, dddd", new System.Globalization.CultureInfo("tr-TR"))</p>
+    </div>
+</div>
+
+<!-- İstatistik Kartları -->
+<div class="row mb-4">
+
+    <!-- Kullanıcılar -->
+    <div class="col-xl-3 col-sm-6 mb-4">
+        <a href="/AdminUser" style="text-decoration:none;">
+            <div class="card" style="border-left:4px solid #e84545;transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <p class="text-muted small mb-1">Toplam Kullanıcı</p>
+                            <h3 style="color:#fff;margin:0;">@(ViewBag.TotalUsers ?? 0)</h3>
+                            <small class="text-success"><i class="mdi mdi-check-circle mr-1"></i>@(ViewBag.ActiveUsers ?? 0) Aktif</small>
+                        </div>
+                        <div style="width:50px;height:50px;background:rgba(232,69,69,0.15);border-radius:12px;display:flex;align-items:center;justify-content:center;">
+                            <i class="mdi mdi-account-multiple" style="font-size:24px;color:#e84545;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <!-- Mesajlar -->
+    <div class="col-xl-3 col-sm-6 mb-4">
+        <a href="/AdminContact" style="text-decoration:none;">
+            <div class="card" style="border-left:4px solid #f39c12;transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <p class="text-muted small mb-1">İletişim Mesajları</p>
+                            <h3 style="color:#fff;margin:0;">@(ViewBag.TotalContacts ?? 0)</h3>
+                            @if ((ViewBag.UnreadContacts ?? 0) > 0)
+                            {
+                                <small class="text-warning"><i class="mdi mdi-email-outline mr-1"></i>@(ViewBag.UnreadContacts) Okunmamış</small>
+                            }
+                            else
+                            {
+                                <small class="text-success"><i class="mdi mdi-check mr-1"></i>Tümü Okundu</small>
+                            }
+                        </div>
+                        <div style="width:50px;height:50px;background:rgba(243,156,18,0.15);border-radius:12px;display:flex;align-items:center;justify-content:center;">
+                            <i class="mdi mdi-email" style="font-size:24px;color:#f39c12;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <!-- Bannerlar -->
+    <div class="col-xl-3 col-sm-6 mb-4">
+        <a href="/AdminBannerSlide" style="text-decoration:none;">
+            <div class="card" style="border-left:4px solid #3498db;transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <p class="text-muted small mb-1">Banner</p>
+                            <h3 style="color:#fff;margin:0;">@(ViewBag.TotalBanners ?? 0)</h3>
+                            <small class="text-info"><i class="mdi mdi-eye mr-1"></i>@(ViewBag.ActiveBanners ?? 0) Aktif</small>
+                        </div>
+                        <div style="width:50px;height:50px;background:rgba(52,152,219,0.15);border-radius:12px;display:flex;align-items:center;justify-content:center;">
+                            <i class="mdi mdi-image-multiple" style="font-size:24px;color:#3498db;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <!-- Hata Logları -->
+    <div class="col-xl-3 col-sm-6 mb-4">
+        <a href="/AdminLog" style="text-decoration:none;">
+            <div class="card" style="border-left:4px solid #e74c3c;transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <p class="text-muted small mb-1">Hata Logları</p>
+                            <h3 style="color:#fff;margin:0;">@(ViewBag.TotalLogs ?? 0)</h3>
+                            @if ((ViewBag.ErrorLogs ?? 0) > 0)
+                            {
+                                <small class="text-danger"><i class="mdi mdi-alert-circle mr-1"></i>@(ViewBag.ErrorLogs) Kritik</small>
+                            }
+                            else
+                            {
+                                <small class="text-success"><i class="mdi mdi-check mr-1"></i>Sorun Yok</small>
+                            }
+                        </div>
+                        <div style="width:50px;height:50px;background:rgba(231,76,60,0.15);border-radius:12px;display:flex;align-items:center;justify-content:center;">
+                            <i class="mdi mdi-bug" style="font-size:24px;color:#e74c3c;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+
+</div>
+
+<div class="row">
+
+    <!-- Son Mesajlar -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 style="color:#fff;margin:0;">Son Mesajlar</h5>
+                    <a href="/AdminContact" class="btn btn-sm btn-outline-primary">Tümü</a>
+                </div>
+                @{
+                    var recentContacts = ViewBag.RecentContacts as List<NTTAccountUI.Models.Entities.Contact>;
+                }
+                @if (recentContacts == null || !recentContacts.Any())
+                {
+                    <p class="text-muted text-center py-3">Henüz mesaj yok.</p>
+                }
+                else
+                {
+                    @foreach (var c in recentContacts)
+                    {
+                        <div style="padding:10px 0;border-bottom:1px solid #1e1e30;display:flex;align-items:center;justify-content:space-between;">
+                            <div>
+                                <p style="color:#fff;margin:0;font-size:13px;font-weight:@(!c.IsRead ? "700" : "400")">@c.FullName</p>
+                                <p class="text-muted" style="margin:0;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px;">@c.Subject</p>
+                            </div>
+                            <div class="text-right">
+                                @if (!c.IsRead)
+                                {
+                                    <span class="badge badge-warning" style="font-size:10px;">Yeni</span>
+                                }
+                                <p class="text-muted" style="margin:2px 0 0;font-size:11px;">@c.CreatedAt.ToTurkeyTimeString("dd.MM HH:mm")</p>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Son Kullanıcılar -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 style="color:#fff;margin:0;">Son Kullanıcılar</h5>
+                    <a href="/AdminUser" class="btn btn-sm btn-outline-primary">Tümü</a>
+                </div>
+                @{
+                    var recentUsers = ViewBag.RecentUsers as List<NTTAccountUI.Models.Entities.User>;
+                }
+                @if (recentUsers == null || !recentUsers.Any())
+                {
+                    <p class="text-muted text-center py-3">Henüz kullanıcı yok.</p>
+                }
+                else
+                {
+                    @foreach (var u in recentUsers)
+                    {
+                        <div style="padding:10px 0;border-bottom:1px solid #1e1e30;display:flex;align-items:center;gap:12px;">
+                            @if (!string.IsNullOrEmpty(u.ProfileImage))
+                            {
+                                <img src="@u.ProfileImage" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;" />
+                            }
+                            else
+                            {
+                                <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#e84545,#c62a88);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                    <i class="mdi mdi-account" style="color:#fff;font-size:14px;"></i>
+                                </div>
+                            }
+                            <div style="flex:1;min-width:0;">
+                                <p style="color:#fff;margin:0;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">@u.Email</p>
+                                <p class="text-muted" style="margin:0;font-size:11px;">@u.CreatedAt.ToTurkeyTimeString("dd.MM.yyyy")</p>
+                            </div>
+                            @if (u.RoleId == 1)
+                            {
+                                <span class="badge badge-danger" style="font-size:10px;">Admin</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-info" style="font-size:10px;">User</span>
+                            }
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Son Loglar -->
+    <div class="col-12 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 style="color:#fff;margin:0;">Son Hata Logları</h5>
+                    <a href="/AdminLog" class="btn btn-sm btn-outline-danger">Tümü</a>
+                </div>
+                @{
+                    var recentLogs = ViewBag.RecentLogs as List<NTTAccountUI.Models.Entities.ErrorLog>;
+                }
+                @if (recentLogs == null || !recentLogs.Any())
+                {
+                    <p class="text-success text-center py-3">
+                        <i class="mdi mdi-check-circle mr-2"></i>Hiç hata logu yok, sistem sağlıklı!
+                    </p>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th style="width:90px;">Seviye</th>
+                                    <th>Mesaj</th>
+                                    <th style="width:130px;">Tarih</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var log in recentLogs)
+                                {
+                                    var bc = log.Level switch
+                                    {
+                                        "Critical" => "badge-danger",
+                                        "Error" => "badge-danger",
+                                        "Warning" => "badge-warning",
+                                        _ => "badge-info"
+                                    };
+                                    <tr>
+                                        <td><span class="badge @bc">@log.Level</span></td>
+                                        <td class="text-muted small" style="max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">@log.Message</td>
+                                        <td class="text-muted small">@log.CreatedAt.ToTurkeyTimeString()</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+</div>

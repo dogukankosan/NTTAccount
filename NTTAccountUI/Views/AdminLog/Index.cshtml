@@ -1,0 +1,298 @@
+﻿@model IEnumerable<NTTAccountUI.Models.Entities.ErrorLog>
+@using NTTAccountUI.Helpers
+
+@{
+    ViewData["Title"] = "Hata Logları";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show mb-4">
+        <i class="mdi mdi-check-circle mr-2"></i> @TempData["Success"]
+        <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show mb-4">
+        <i class="mdi mdi-alert-circle mr-2"></i> @TempData["Error"]
+        <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+    </div>
+}
+
+<div class="row mb-4">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <h4 class="mb-0" style="color:#fff;">
+            Hata Logları
+            <span class="badge badge-warning ml-2">@Model.Count() Kayıt</span>
+            <span class="badge badge-danger ml-1">@Model.Count(x => x.Level == "Error" || x.Level == "Critical") Hata</span>
+        </h4>
+        @if (Model.Any())
+        {
+            <form asp-action="DeleteAll" asp-controller="AdminLog" method="post" id="deleteAllForm">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-danger">
+                    <i class="mdi mdi-delete-sweep mr-1"></i> Tümünü Sil
+                </button>
+            </form>
+        }
+    </div>
+</div>
+
+<!-- Filtreleme -->
+<div class="card mb-4">
+    <div class="card-body py-3">
+        <div class="row align-items-center">
+            <div class="col-md-4">
+                <input type="text" id="searchInput" class="form-control" placeholder="Mesaj, kaynak veya IP ara...">
+            </div>
+            <div class="col-md-2">
+                <select id="levelFilter" class="form-control">
+                    <option value="">Tüm Seviyeler</option>
+                    <option value="Critical">Critical</option>
+                    <option value="Error">Error</option>
+                    <option value="Warning">Warning</option>
+                    <option value="Info">Info</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select id="methodFilter" class="form-control">
+                    <option value="">Tüm Metodlar</option>
+                    <option value="GET">GET</option>
+                    <option value="POST">POST</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-outline-secondary btn-block" id="clearFilter">
+                    <i class="mdi mdi-close mr-1"></i> Temizle
+                </button>
+            </div>
+            <div class="col-md-2 text-right">
+                <span class="text-muted small" id="resultCount"></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table" id="logTable">
+                <thead>
+                    <tr>
+                        <th style="width:100px;">Seviye</th>
+                        <th>Mesaj</th>
+                        <th style="width:130px;">Kaynak</th>
+                        <th style="width:160px;">URL</th>
+                        <th style="width:110px;">IP</th>
+                        <th style="width:130px;">Tarih</th>
+                        <th style="width:60px;">İşlem</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">
+                                <i class="mdi mdi-check-circle text-success" style="font-size:32px;display:block;margin-bottom:8px;"></i>
+                                Hiç hata logu yok.
+                            </td>
+                        </tr>
+                    }
+                    @foreach (var log in Model)
+                    {
+                        <tr data-level="@log.Level"
+                            data-method="@log.RequestMethod"
+                            data-search="@($"{log.Message} {log.Source} {log.IpAddress} {log.RequestPath}".ToLower())">
+                            <td>
+                                @{
+                                    var badgeClass = log.Level switch
+                                    {
+                                        "Critical" => "badge-danger",
+                                        "Error" => "badge-danger",
+                                        "Warning" => "badge-warning",
+                                        "Info" => "badge-info",
+                                        _ => "badge-secondary"
+                                    };
+                                    var icon = log.Level switch
+                                    {
+                                        "Critical" => "mdi-alert-octagon",
+                                        "Error" => "mdi-alert-circle",
+                                        "Warning" => "mdi-alert",
+                                        "Info" => "mdi-information",
+                                        _ => "mdi-help-circle"
+                                    };
+                                }
+                                <span class="badge @badgeClass">
+                                    <i class="mdi @icon mr-1"></i>@log.Level
+                                </span>
+                            </td>
+                            <td>
+                                <a href="#" class="text-muted"
+                                   style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;text-decoration:none;"
+                                   onclick="showDetail('@log.Id'); return false;"
+                                   title="Tıkla - Detayı Gör">
+                                    @log.Message
+                                </a>
+                            </td>
+                            <td class="text-muted small" style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                                @log.Source
+                            </td>
+                            <td class="text-muted small">
+                                @if (!string.IsNullOrEmpty(log.RequestMethod))
+                                {
+                                    <span class="badge badge-warning">@log.RequestMethod</span>
+                                }
+                                <span style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;vertical-align:middle;">
+                                    @log.RequestPath
+                                </span>
+                            </td>
+                            <td class="text-muted small">@log.IpAddress</td>
+                            <td class="text-muted small">@log.CreatedAt.ToTurkeyTimeString()</td>
+                            <td>
+                                <form asp-action="Delete" asp-controller="AdminLog"
+                                      method="post" style="display:inline;"
+                                      class="delete-form">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@log.Id" />
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Sil">
+                                        <i class="mdi mdi-delete"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <p class="text-muted small mt-2" id="noResult" style="display:none;">
+                <i class="mdi mdi-magnify mr-1"></i> Arama sonucu bulunamadı.
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Detay Modal -->
+<div class="modal fade" id="detailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" style="background:#1a1a2e;border:1px solid #2a2a4a;">
+            <div class="modal-header" style="border-color:#2a2a4a;">
+                <h5 class="modal-title" style="color:#fff;">
+                    <i class="mdi mdi-alert-circle text-danger mr-2"></i>Log Detayı
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" style="color:#fff;"><span>&times;</span></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted small mb-1">Mesaj</p>
+                <p id="modalMessage" style="color:#fff;margin-bottom:16px;line-height:1.6;"></p>
+                <div id="stackTraceSection">
+                    <p class="text-muted small mb-1">Stack Trace</p>
+                    <pre id="stackTrace" style="color:#ff6b6b;font-size:12px;white-space:pre-wrap;max-height:350px;overflow-y:auto;background:#0d0d0d;padding:16px;border-radius:4px;"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Log verileri
+        var logData = {
+            @foreach (var log in Model)
+            {
+                    <text>'@log.Id': { message: @Json.Serialize(log.Message), exception: @Json.Serialize(log.Exception ?? "") },</text>
+            }
+        };
+
+        function showDetail(id) {
+            var data = logData[id];
+            if (!data) return;
+            document.getElementById('modalMessage').textContent = data.message;
+            if (data.exception && data.exception.trim() !== '') {
+                document.getElementById('stackTrace').textContent = data.exception;
+                document.getElementById('stackTraceSection').style.display = 'block';
+            } else {
+                document.getElementById('stackTraceSection').style.display = 'none';
+            }
+            $('#detailModal').modal('show');
+        }
+
+        // Filtreleme
+        function filterTable() {
+            var search = $('#searchInput').val().toLowerCase();
+            var level  = $('#levelFilter').val();
+            var method = $('#methodFilter').val();
+            var count  = 0;
+
+            $('#logTable tbody tr').each(function () {
+                var rowSearch = $(this).data('search') || '';
+                var rowLevel  = $(this).data('level') || '';
+                var rowMethod = $(this).data('method') || '';
+
+                var matchSearch = !search || rowSearch.includes(search);
+                var matchLevel  = !level  || rowLevel === level;
+                var matchMethod = !method || rowMethod === method;
+
+                if (matchSearch && matchLevel && matchMethod) {
+                    $(this).show();
+                    count++;
+                } else {
+                    $(this).hide();
+                }
+            });
+
+            $('#noResult').toggle(count === 0);
+            $('#resultCount').text(count > 0 ? count + ' kayıt gösteriliyor' : '');
+        }
+
+        $('#searchInput, #levelFilter, #methodFilter').on('input change', filterTable);
+
+        $('#clearFilter').on('click', function () {
+            $('#searchInput').val('');
+            $('#levelFilter').val('');
+            $('#methodFilter').val('');
+            filterTable();
+        });
+
+        // Tek silme
+        document.querySelectorAll('.delete-form').forEach(function (form) {
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                var submitForm = this;
+                Swal.fire({
+                    title: 'Log silinsin mi?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#e84545',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Evet, Sil!',
+                    cancelButtonText: 'İptal',
+                    background: '#1a1a2e',
+                    color: '#fff'
+                }).then(function (result) {
+                    if (result.isConfirmed) submitForm.submit();
+                });
+            });
+        });
+
+        // Tümünü sil
+        document.getElementById('deleteAllForm')?.addEventListener('submit', function (e) {
+            e.preventDefault();
+            var submitForm = this;
+            Swal.fire({
+                title: 'Tüm loglar silinsin mi?',
+                text: 'Bu işlem geri alınamaz!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#e84545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Evet, Tümünü Sil!',
+                cancelButtonText: 'İptal',
+                background: '#1a1a2e',
+                color: '#fff'
+            }).then(function (result) {
+                if (result.isConfirmed) submitForm.submit();
+            });
+        });
+    </script>
+}

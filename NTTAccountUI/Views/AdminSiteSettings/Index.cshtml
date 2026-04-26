@@ -1,0 +1,355 @@
+﻿@model NTTAccountUI.Models.ViewModels.SiteSettingsViewModel
+
+@{
+    ViewData["Title"] = "Site Ayarları";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show mb-4">
+        <i class="mdi mdi-check-circle mr-2"></i> @TempData["Success"]
+        <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show mb-4">
+        <i class="mdi mdi-alert-circle mr-2"></i> @TempData["Error"]
+        <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+    </div>
+}
+
+@if (!ViewData.ModelState.IsValid && ViewData.ModelState.ErrorCount > 0)
+{
+    <div class="alert alert-danger mb-4">
+        <i class="mdi mdi-alert-circle mr-2"></i>
+        @Html.ValidationSummary(false)
+    </div>
+}
+
+<form asp-action="Index" asp-controller="AdminSiteSettings" method="post"
+      enctype="multipart/form-data" id="settingsForm">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="SiteLogo" id="SiteLogoBase64" />
+    <input type="hidden" asp-for="SiteIcon" id="SiteIconBase64" />
+    <input type="hidden" asp-for="CeoImage" id="CeoImageBase64" />
+
+    <div class="row">
+
+        <!-- Sol Kolon -->
+        <div class="col-lg-8">
+
+            <!-- Site Genel -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h4 class="card-title">Site Genel Bilgileri</h4>
+
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label">Site Adı <span class="text-danger">*</span></label>
+                        <div class="col-sm-9">
+                            <input asp-for="SiteName" class="form-control" placeholder="NTT Hesap" />
+                            <span asp-validation-for="SiteName" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label">Site Açıklaması <span class="text-danger">*</span></label>
+                        <div class="col-sm-9">
+                            <input asp-for="SiteDescription" class="form-control" placeholder="Knight Online" />
+                            <span asp-validation-for="SiteDescription" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label">Site URL <span class="text-danger">*</span></label>
+                        <div class="col-sm-9">
+                            <input asp-for="SiteUrl" class="form-control" placeholder="https://ntthesap.com" />
+                            <span asp-validation-for="SiteUrl" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label">Hakkında</label>
+                        <div class="col-sm-9">
+                            <textarea asp-for="AboutText" class="form-control" rows="4"
+                                      placeholder="Site hakkında kısa açıklama..."></textarea>
+                            <small class="text-muted">Maks. 2000 karakter</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- İletişim -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h4 class="card-title">İletişim Bilgileri</h4>
+
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label">Email</label>
+                        <div class="col-sm-9">
+                            <input asp-for="Email" class="form-control" placeholder="info@ntthesap.com" />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label">WhatsApp</label>
+                        <div class="col-sm-9">
+                            <div style="display:flex;align-items:stretch;">
+                                <span style="background:#1a1a2e;border:1px solid #2a2a4a;border-right:none;border-radius:4px 0 0 4px;padding:0 12px;color:#fff;font-size:14px;display:flex;align-items:center;white-space:nowrap;">
+                                    +90
+                                </span>
+                                <input asp-for="WhatsApp" class="form-control" id="whatsappInput"
+                                       placeholder="5XX XXX XX XX"
+                                       autocomplete="off" maxlength="13"
+                                       style="border-radius:0 4px 4px 0 !important;" />
+                            </div>
+                            <small class="text-muted d-block mt-1">Örnek: 549 519 11 39 — +90 otomatik eklenir.</small>
+                            <span asp-validation-for="WhatsApp" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label">Telegram</label>
+                        <div class="col-sm-9">
+                            <input asp-for="Telegram" class="form-control" placeholder="@@ntthesap" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sosyal Medya -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h4 class="card-title">Sosyal Medya</h4>
+
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label"><i class="mdi mdi-facebook mr-1"></i> Facebook</label>
+                        <div class="col-sm-9">
+                            <input asp-for="Facebook" class="form-control" placeholder="https://facebook.com/ntthesap" />
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label"><i class="mdi mdi-discord mr-1"></i> Discord</label>
+                        <div class="col-sm-9">
+                            <input asp-for="Discord" class="form-control" placeholder="https://discord.gg/ntthesap" />
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label"><i class="mdi mdi-youtube mr-1"></i> YouTube</label>
+                        <div class="col-sm-9">
+                            <input asp-for="YouTube" class="form-control" placeholder="https://youtube.com/ntthesap" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SEO -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h4 class="card-title">SEO Bilgileri</h4>
+
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label">Ad Soyad</label>
+                        <div class="col-sm-9">
+                            <input asp-for="CeoName" class="form-control" placeholder="Ad Soyad" />
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label">Unvan</label>
+                        <div class="col-sm-9">
+                            <input asp-for="CeoTitle" class="form-control" placeholder="SEO Title" />
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label">Açıklama</label>
+                        <div class="col-sm-9">
+                            <textarea asp-for="CeoDescription" class="form-control" rows="3"
+                                      placeholder="SEO hakkında kısa açıklama..."></textarea>
+                            <small class="text-muted">Maks. 1000 karakter</small>
+                        </div>
+                    </div>
+
+                    <!-- SEO Fotoğrafı -->
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label">SEO Fotoğrafı</label>
+                        <div class="col-sm-9">
+                            @if (!string.IsNullOrEmpty(Model.CeoImage))
+                            {
+                                <img src="@Model.CeoImage" id="ceoPreview"
+                                     style="width:80px;height:80px;border-radius:50%;object-fit:cover;margin-bottom:10px;display:block;" />
+                            }
+                            else
+                            {
+                                <div id="ceoPreview" style="width:80px;height:80px;border-radius:50%;background:#1a1a2e;display:flex;align-items:center;justify-content:center;margin-bottom:10px;">
+                                    <i class="mdi mdi-account" style="font-size:32px;color:#555;"></i>
+                                </div>
+                            }
+                            <input type="file" id="ceoImageInput" accept="image/*" class="form-control-file" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Sağ Kolon - Görseller -->
+        <div class="col-lg-4">
+
+            <!-- Site Logosu -->
+            <div class="card mb-4">
+                <div class="card-body text-center">
+                    <h4 class="card-title">Site Logosu <span class="text-danger">*</span></h4>
+                    @if (!string.IsNullOrEmpty(Model.SiteLogo))
+                    {
+                        <img src="@Model.SiteLogo" id="logoPreview"
+                             style="max-height:80px;max-width:100%;object-fit:contain;margin-bottom:12px;display:block;margin-left:auto;margin-right:auto;" />
+                    }
+                    else
+                    {
+                        <div id="logoPreview" style="height:80px;background:#1a1a2e;display:flex;align-items:center;justify-content:center;margin-bottom:12px;border-radius:6px;">
+                            <i class="mdi mdi-image" style="font-size:32px;color:#555;"></i>
+                        </div>
+                    }
+                    <input type="file" id="siteLogoInput" accept="image/*" class="form-control-file" />
+                    <small class="text-muted d-block mt-1">PNG, JPG, SVG — Maks. 2MB</small>
+                </div>
+            </div>
+
+            <!-- Site İkonu -->
+            <div class="card mb-4">
+                <div class="card-body text-center">
+                    <h4 class="card-title">Site İkonu <span class="text-danger">*</span></h4>
+                    @if (!string.IsNullOrEmpty(Model.SiteIcon))
+                    {
+                        <img src="@Model.SiteIcon" id="iconPreview"
+                             style="width:48px;height:48px;object-fit:contain;margin-bottom:12px;display:block;margin-left:auto;margin-right:auto;" />
+                    }
+                    else
+                    {
+                        <div id="iconPreview" style="width:48px;height:48px;background:#1a1a2e;display:flex;align-items:center;justify-content:center;margin-bottom:12px;border-radius:6px;margin-left:auto;margin-right:auto;">
+                            <i class="mdi mdi-image" style="font-size:24px;color:#555;"></i>
+                        </div>
+                    }
+                    <input type="file" id="siteIconInput" accept="image/*,.ico" class="form-control-file" />
+                    <small class="text-muted d-block mt-1">PNG, ICO — 32x32 önerilen</small>
+                </div>
+            </div>
+
+            <!-- Kaydet -->
+            <div class="card">
+                <div class="card-body">
+                    <button type="submit" id="saveBtn" class="btn btn-primary btn-block">
+                        <i class="mdi mdi-content-save mr-1"></i> Kaydet
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <script>
+        var allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml', 'image/x-icon'];
+
+        function handleImageUpload(inputId, previewId, hiddenId, isRound) {
+            document.getElementById(inputId).addEventListener('change', function () {
+                var file = this.files[0];
+                if (!file) return;
+
+                if (!allowedTypes.includes(file.type)) {
+                    Swal.fire({
+                        title: 'Geçersiz Dosya!',
+                        text: 'Sadece resim dosyası yükleyebilirsiniz. (JPG, PNG, GIF, WEBP, SVG)',
+                        icon: 'error',
+                        confirmButtonColor: '#e84545',
+                        background: '#1a1a2e',
+                        color: '#fff'
+                    });
+                    this.value = '';
+                    return;
+                }
+
+                if (file.size > 2 * 1024 * 1024) {
+                    Swal.fire({
+                        title: 'Dosya Çok Büyük!',
+                        text: 'Dosya boyutu 2MB\'dan büyük olamaz.',
+                        icon: 'warning',
+                        confirmButtonColor: '#e84545',
+                        background: '#1a1a2e',
+                        color: '#fff'
+                    });
+                    this.value = '';
+                    return;
+                }
+
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    var preview = document.getElementById(previewId);
+                    var base64  = e.target.result;
+
+                    if (preview.tagName === 'IMG') {
+                        preview.src = base64;
+                    } else {
+                        var img = document.createElement('img');
+                        img.id = previewId;
+                        img.src = base64;
+                        img.style.cssText = isRound
+                            ? 'width:80px;height:80px;border-radius:50%;object-fit:cover;margin-bottom:10px;display:block;'
+                            : 'max-height:80px;max-width:100%;object-fit:contain;margin-bottom:12px;display:block;margin-left:auto;margin-right:auto;';
+                        preview.parentNode.replaceChild(img, preview);
+                    }
+
+                    document.getElementById(hiddenId).value = base64;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        handleImageUpload('siteLogoInput', 'logoPreview',  'SiteLogoBase64', false);
+        handleImageUpload('siteIconInput', 'iconPreview',  'SiteIconBase64', false);
+        handleImageUpload('ceoImageInput', 'ceoPreview',   'CeoImageBase64', true);
+
+        // WhatsApp format
+        var waInput = document.getElementById('whatsappInput');
+        if (waInput) {
+            if (waInput.value.startsWith('+90')) {
+                waInput.value = waInput.value.substring(3).trim();
+            }
+
+            waInput.addEventListener('input', function () {
+                var digits = this.value.replace(/\D/g, '').substring(0, 10);
+                var f = '';
+                if (digits.length > 0) f = digits.substring(0, 3);
+                if (digits.length > 3) f += ' ' + digits.substring(3, 6);
+                if (digits.length > 6) f += ' ' + digits.substring(6, 8);
+                if (digits.length > 8) f += ' ' + digits.substring(8, 10);
+                this.value = f;
+            });
+        }
+
+        // Submit — tek listener
+        document.getElementById('settingsForm').addEventListener('submit', function () {
+            // WhatsApp +90 ekle
+            if (waInput) {
+                var digits = waInput.value.replace(/\D/g, '');
+                if (digits.length > 0) {
+                    waInput.value = '+90' + digits;
+                }
+            }
+
+            // Buton disable
+            var btn = document.getElementById('saveBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="mdi mdi-loading mdi-spin mr-1"></i> Kaydediliyor...';
+        });
+    </script>
+}

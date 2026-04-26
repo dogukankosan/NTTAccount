@@ -1,0 +1,481 @@
+﻿@model NTTAccountUI.Models.ViewModels.ContactViewModel
+
+@{
+    ViewData["Title"] = "İletişim";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var raw = ViewBag.WhatsApp as string ?? "";
+    var digits = System.Text.RegularExpressions.Regex.Replace(raw, @"\D", "");
+    if (digits.StartsWith("90")) digits = digits.Substring(2);
+    if (digits.StartsWith("0")) digits = digits.Substring(1);
+    if (digits.Length > 10) digits = digits.Substring(0, 10);
+    var formatted = digits.Length == 10
+        ? $"{digits.Substring(0, 3)} {digits.Substring(3, 3)} {digits.Substring(6, 2)} {digits.Substring(8, 2)}"
+        : digits;
+    var waLink = "90" + digits;
+}
+
+@section Styles {
+    <style>
+        .contact_section {
+            padding: 80px 0;
+            background: #0d0d0d;
+        }
+
+            .contact_section h2.contact-title {
+                color: #fff;
+                font-size: 32px;
+                margin-bottom: 40px;
+                position: relative;
+                padding-bottom: 15px;
+            }
+
+                .contact_section h2.contact-title::after {
+                    content: '';
+                    position: absolute;
+                    bottom: 0;
+                    left: 0;
+                    width: 60px;
+                    height: 3px;
+                    background: linear-gradient(90deg, #e84545, #c62a88);
+                }
+
+            .contact_section .form-control {
+                background: #1a1a2e !important;
+                border: 1px solid #2a2a4a !important;
+                color: #fff !important;
+                border-radius: 4px;
+                padding: 14px 18px;
+                font-size: 14px;
+                transition: border-color 0.3s;
+            }
+
+                .contact_section .form-control:focus {
+                    border-color: #e84545 !important;
+                    box-shadow: 0 0 0 0.15rem rgba(232,69,69,0.2) !important;
+                }
+
+                .contact_section .form-control::placeholder {
+                    color: rgba(255,255,255,0.5) !important;
+                }
+
+                .contact_section .form-control.is-valid {
+                    border-color: #28a745 !important;
+                }
+
+                .contact_section .form-control.is-invalid {
+                    border-color: #e84545 !important;
+                }
+
+            .contact_section textarea.form-control {
+                resize: vertical;
+                min-height: 200px;
+            }
+
+            .contact_section .alert-danger {
+                background: rgba(232,69,69,0.15);
+                border: 1px solid #e84545;
+                color: #ff9090;
+                border-radius: 6px;
+            }
+
+                .contact_section .alert-danger ul {
+                    margin: 0;
+                    padding-left: 18px;
+                    color: #ff9090;
+                }
+
+        .field-error {
+            color: #ff7070;
+            font-size: 12px;
+            display: none;
+            margin-top: 4px;
+        }
+
+        /* Telefon prefix */
+        .phone-prefix {
+            background: #22223a;
+            border: 1px solid #2a2a4a;
+            border-right: none;
+            border-radius: 4px 0 0 4px;
+            padding: 0 14px;
+            color: #fff;
+            font-size: 14px;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            min-height: 50px;
+        }
+
+        #phoneInput {
+            background: #1a1a2e !important;
+            border: 1px solid #2a2a4a !important;
+            color: #fff !important;
+            border-radius: 0 4px 4px 0 !important;
+            padding: 14px 18px !important;
+            font-size: 14px;
+            width: 100%;
+            transition: border-color 0.3s;
+        }
+
+            #phoneInput:focus {
+                border-color: #e84545 !important;
+                box-shadow: 0 0 0 0.15rem rgba(232,69,69,0.2) !important;
+                outline: none;
+            }
+
+            #phoneInput::placeholder {
+                color: rgba(255,255,255,0.4);
+            }
+
+            #phoneInput.is-invalid {
+                border-color: #e84545 !important;
+            }
+
+            #phoneInput.is-valid {
+                border-color: #28a745 !important;
+            }
+
+        /* İletişim kutusu */
+        .contact_info_box {
+            background: #1a1a2e;
+            border: 1px solid #2a2a4a;
+            border-radius: 8px;
+            padding: 35px 30px;
+        }
+
+            .contact_info_box h4 {
+                color: #fff;
+                font-size: 18px;
+                margin-bottom: 25px;
+                padding-bottom: 12px;
+                border-bottom: 1px solid #2a2a4a;
+            }
+
+        .single_contact_info {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 22px;
+            gap: 15px;
+            text-decoration: none;
+        }
+
+            .single_contact_info:hover .contact_info_text p {
+                color: #fff;
+            }
+
+        .contact_icon {
+            width: 42px;
+            height: 42px;
+            min-width: 42px;
+            background: linear-gradient(135deg, #e84545, #c62a88);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            color: #fff;
+        }
+
+        .contact_info_text h5 {
+            color: #fff;
+            font-size: 14px;
+            margin-bottom: 3px;
+        }
+
+        .contact_info_text p {
+            color: #888;
+            font-size: 13px;
+            margin: 0;
+            transition: color 0.2s;
+        }
+
+        .char-count {
+            float: right;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .alert-success {
+            background: rgba(40,167,69,0.15);
+            border: 1px solid #28a745;
+            color: #5cb85c;
+            border-radius: 6px;
+        }
+    </style>
+}
+
+<section class="breadcrumb breadcrumb_bg"
+         style="background-image: url('/img/contactbanner.png'); background-size: cover; background-position: center;">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="breadcrumb_iner text-center">
+                    <div class="breadcrumb_iner_item">
+                        <h2>İletişim</h2>
+                        <p>Ana Sayfa &nbsp;/&nbsp; İletişim</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="contact_section">
+    <div class="container">
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show mb-5" role="alert">
+                <i class="fas fa-check-circle mr-2"></i> @TempData["Success"]
+                <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+            </div>
+        }
+
+        <div class="row">
+
+            <!-- Form -->
+            <div class="col-lg-8 mb-5 mb-lg-0">
+                <h2 class="contact-title">Bize Ulaşın</h2>
+
+                @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ErrorCount > 0)
+                {
+                    <div class="alert alert-danger mb-4">
+                        <i class="fas fa-exclamation-circle mr-2"></i>
+                        @Html.ValidationSummary(false, "", new { @class = "mb-0" })
+                    </div>
+                }
+
+                <form asp-action="Index" asp-controller="Contact" method="post" id="contactForm" novalidate>
+                    @Html.AntiForgeryToken()
+
+                    <!-- Honeypot -->
+                    <div style="display:none;">
+                        <input type="text" asp-for="Website" autocomplete="off" tabindex="-1" />
+                    </div>
+
+                    <div class="row">
+
+                        <!-- Ad Soyad -->
+                        <div class="col-sm-6">
+                            <div class="form-group mb-3">
+                                <input asp-for="FullName" class="form-control"
+                                       placeholder="Ad Soyad *" autocomplete="off"
+                                       id="FullName" />
+                                <span class="field-error" id="err-FullName"></span>
+                                <span asp-validation-for="FullName" class="field-error d-block"></span>
+                            </div>
+                        </div>
+
+                        <!-- Telefon -->
+                        <div class="col-sm-6">
+                            <div class="form-group mb-3">
+                                <div style="display:flex; align-items:stretch;">
+                                    <span class="phone-prefix">🇹🇷 +90</span>
+                                    <input type="tel" id="phoneInput"
+                                           name="PhoneDisplay"
+                                           class="form-control"
+                                           placeholder="5XX XXX XX XX *"
+                                           autocomplete="off"
+                                           maxlength="13" />
+                                    <input type="hidden" asp-for="Phone" id="phoneHidden" />
+                                </div>
+                                <span class="field-error" id="err-Phone"></span>
+                                <span asp-validation-for="Phone" class="field-error d-block"></span>
+                            </div>
+                        </div>
+
+                        <!-- Konu -->
+                        <div class="col-12">
+                            <div class="form-group mb-3">
+                                <input asp-for="Subject" class="form-control"
+                                       placeholder="Konu *" autocomplete="off"
+                                       id="Subject" />
+                                <span class="field-error" id="err-Subject"></span>
+                                <span asp-validation-for="Subject" class="field-error d-block"></span>
+                            </div>
+                        </div>
+
+                        <!-- Mesaj -->
+                        <div class="col-12">
+                            <div class="form-group mb-1">
+                                <textarea asp-for="Message" class="form-control w-100"
+                                          rows="8" placeholder="Mesajınız *"
+                                          id="Message"></textarea>
+                                <span class="field-error" id="err-Message"></span>
+                                <span asp-validation-for="Message" class="field-error d-block"></span>
+                                <small class="char-count text-muted">0 / 2000</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group mt-4">
+                        <button type="submit" id="submitBtn" class="btn_1">
+                            <i class="fas fa-paper-plane mr-2"></i> Mesaj Gönder
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- İletişim Bilgileri -->
+            <div class="col-lg-4">
+                <div class="contact_info_box">
+                    <h4>İletişim Bilgileri</h4>
+
+                    @if (!string.IsNullOrEmpty(ViewBag.Email as string))
+                    {
+                        <a href="mailto:@ViewBag.Email" class="single_contact_info" style="text-decoration:none;">
+                            <div class="contact_icon"><i class="fas fa-envelope"></i></div>
+                            <div class="contact_info_text"><h5>Email</h5><p>@ViewBag.Email</p></div>
+                        </a>
+                    }
+                    @if (!string.IsNullOrEmpty(ViewBag.WhatsApp as string))
+                    {
+                        <a href="https://wa.me/@waLink" target="_blank" class="single_contact_info" style="text-decoration:none;">
+                            <div class="contact_icon"><i class="fab fa-whatsapp"></i></div>
+                            <div class="contact_info_text"><h5>WhatsApp</h5><p>+90 @formatted</p></div>
+                        </a>
+                    }
+                    @if (!string.IsNullOrEmpty(ViewBag.Telegram as string))
+                    {
+                        <a href="https://t.me/@(ViewBag.Telegram as string)" target="_blank" class="single_contact_info" style="text-decoration:none;">
+                            <div class="contact_icon"><i class="fab fa-telegram-plane"></i></div>
+                            <div class="contact_info_text"><h5>Telegram</h5><p>@ViewBag.Telegram</p></div>
+                        </a>
+                    }
+                    @if (!string.IsNullOrEmpty(ViewBag.Discord as string))
+                    {
+                        <a href="@ViewBag.Discord" target="_blank" class="single_contact_info" style="text-decoration:none;">
+                            <div class="contact_icon"><i class="fab fa-discord"></i></div>
+                            <div class="contact_info_text"><h5>Discord</h5><p>Sunucumuza Katıl</p></div>
+                        </a>
+                    }
+                    @if (!string.IsNullOrEmpty(ViewBag.YouTube as string))
+                    {
+                        <a href="@ViewBag.YouTube" target="_blank" class="single_contact_info" style="text-decoration:none;">
+                            <div class="contact_icon"><i class="fab fa-youtube"></i></div>
+                            <div class="contact_info_text"><h5>YouTube</h5><p>Kanalımıza Abone Ol</p></div>
+                        </a>
+                    }
+                    @if (!string.IsNullOrEmpty(ViewBag.Facebook as string))
+                    {
+                        <a href="@ViewBag.Facebook" target="_blank" class="single_contact_info mb-0" style="text-decoration:none;">
+                            <div class="contact_icon"><i class="fab fa-facebook-f"></i></div>
+                            <div class="contact_info_text"><h5>Facebook</h5><p>Sayfamızı Takip Et</p></div>
+                        </a>
+                    }
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+
+            // ── Hata göster/gizle yardımcıları ───────────────────
+            function showError(inputId, errId, msg) {
+                $('#' + inputId).addClass('is-invalid').removeClass('is-valid');
+                $('#' + errId).text(msg).show();
+            }
+            function clearError(inputId, errId) {
+                $('#' + inputId).removeClass('is-invalid').addClass('is-valid');
+                $('#' + errId).text('').hide();
+            }
+
+            // ── Telefon format ────────────────────────────────────
+            $('#phoneInput').on('input', function () {
+                var digits = $(this).val().replace(/\D/g, '');
+                if (digits.startsWith('90')) digits = digits.substring(2);
+                if (digits.startsWith('0'))  digits = digits.substring(1);
+                digits = digits.substring(0, 10);
+
+                var f = '';
+                if (digits.length > 0) f = digits.substring(0, 3);
+                if (digits.length > 3) f += ' ' + digits.substring(3, 6);
+                if (digits.length > 6) f += ' ' + digits.substring(6, 8);
+                if (digits.length > 8) f += ' ' + digits.substring(8, 10);
+                $(this).val(f);
+
+                if (digits.length === 10) {
+                    clearError('phoneInput', 'err-Phone');
+                } else {
+                    $('#phoneInput').removeClass('is-valid');
+                }
+            });
+
+            // ── Karakter sayacı ───────────────────────────────────
+            $('#Message').on('input', function () {
+                var len = $(this).val().length;
+                var $c  = $('.char-count');
+                $c.text(len + ' / 2000');
+                $c.removeClass('text-muted text-warning text-danger');
+                if (len >= 2000)     $c.addClass('text-danger');
+                else if (len > 1800) $c.addClass('text-warning');
+                else                 $c.addClass('text-muted');
+            });
+
+            // ── Form gönderim ─────────────────────────────────────
+            $('#contactForm').on('submit', function (e) {
+                var isValid = true;
+
+                // Ad Soyad — sadece harf, 2-100 karakter
+                var fullName = $('#FullName').val().trim();
+                var namePattern = /^[a-zA-ZğüşıöçĞÜŞİÖÇ\s]+$/;
+                if (fullName.length < 2 || fullName.length > 100) {
+                    e.preventDefault();
+                    showError('FullName', 'err-FullName', 'Ad Soyad 2-100 karakter arasında olmalıdır.');
+                    isValid = false;
+                } else if (!namePattern.test(fullName)) {
+                    e.preventDefault();
+                    showError('FullName', 'err-FullName', 'Ad Soyad sadece harf içermelidir.');
+                    isValid = false;
+                } else {
+                    clearError('FullName', 'err-FullName');
+                }
+
+                // Telefon — 10 hane
+                var phoneDigits = $('#phoneInput').val().replace(/\D/g, '');
+                if (phoneDigits.startsWith('90')) phoneDigits = phoneDigits.substring(2);
+                if (phoneDigits.startsWith('0'))  phoneDigits = phoneDigits.substring(1);
+
+                if (phoneDigits.length !== 10) {
+                    e.preventDefault();
+                    showError('phoneInput', 'err-Phone', 'Geçerli bir telefon numarası giriniz. (5XX XXX XX XX)');
+                    isValid = false;
+                } else {
+                    clearError('phoneInput', 'err-Phone');
+                    $('#phoneHidden').val('+90' + phoneDigits);
+                }
+
+                // Konu — 3-200 karakter
+                var subject = $('#Subject').val().trim();
+                if (subject.length < 3 || subject.length > 200) {
+                    e.preventDefault();
+                    showError('Subject', 'err-Subject', 'Konu 3-200 karakter arasında olmalıdır.');
+                    isValid = false;
+                } else {
+                    clearError('Subject', 'err-Subject');
+                }
+
+                // Mesaj — 10-2000 karakter
+                var message = $('#Message').val().trim();
+                if (message.length < 10 || message.length > 2000) {
+                    e.preventDefault();
+                    showError('Message', 'err-Message', 'Mesaj 10-2000 karakter arasında olmalıdır.');
+                    isValid = false;
+                } else {
+                    clearError('Message', 'err-Message');
+                }
+
+                if (isValid) {
+                    $('#submitBtn').prop('disabled', true)
+                        .html('<i class="fas fa-spinner fa-spin mr-2"></i> Gönderiliyor...');
+                }
+            });
+        });
+    </script>
+}

@@ -1,0 +1,510 @@
+﻿@model NTTAccountUI.Models.ViewModels.AdminLoginViewModel
+
+@{
+    ViewData["Title"] = "Admin Giriş";
+    Layout = null;
+
+    var raw = ViewBag.WhatsApp as string ?? "";
+    var digits = System.Text.RegularExpressions.Regex.Replace(raw, @"\D", "");
+    if (digits.StartsWith("90")) digits = digits.Substring(2);
+    if (digits.StartsWith("0")) digits = digits.Substring(1);
+    if (digits.Length > 10) digits = digits.Substring(0, 10);
+    var waFormatted = digits.Length == 10
+        ? $"+90 {digits.Substring(0, 3)} {digits.Substring(3, 3)} {digits.Substring(6, 2)} {digits.Substring(8, 2)}"
+        : raw;
+    var waLink = "90" + digits;
+
+    var siteName = ViewBag.SiteName as string ?? "NTT Hesap";
+    var siteLogo = ViewBag.SiteLogo as string ?? "/UserThema/img/logo.png";
+    var siteIcon = ViewBag.SiteIcon as string ?? "/UserThema/img/favicon.png";
+}
+
+
+<html lang="tr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>@siteName - Admin Giriş</title>
+    <link rel="shortcut icon" href="@siteIcon" />
+    <link rel="stylesheet" href="~/adminThema/assets/vendors/mdi/css/materialdesignicons.min.css">
+    <link rel="stylesheet" href="~/adminThema/assets/vendors/css/vendor.bundle.base.css">
+    <link rel="stylesheet" href="~/adminThema/assets/css/style.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body, .container-scroller {
+            min-height: 100vh;
+            background: #0b0b0f;
+        }
+
+        /* Kar */
+        #snowCanvas {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .login_wrapper {
+            min-height: 100vh;
+            display: flex;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Sol panel */
+        .login_bg_side {
+            flex: 1;
+            background-image: url('/img/login.png');
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 40px;
+        }
+
+            .login_bg_side::before {
+                content: '';
+                position: absolute;
+                inset: 0;
+                background: linear-gradient(135deg, rgba(232,69,69,0.45), rgba(0,0,0,0.75));
+            }
+
+        .login_bg_top {
+            position: relative;
+            z-index: 2;
+        }
+
+            .login_bg_top img {
+                max-height: 60px;
+            }
+
+        .login_bg_bottom {
+            position: relative;
+            z-index: 2;
+        }
+
+            .login_bg_bottom h2 {
+                color: #fff;
+                font-size: 26px;
+                font-weight: 700;
+                margin-bottom: 8px;
+            }
+
+            .login_bg_bottom p {
+                color: rgba(255,255,255,0.65);
+                font-size: 14px;
+                margin-bottom: 24px;
+            }
+
+        /* Sosyal linkler sol panelde */
+        .login_social_links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .login_social_item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 8px;
+            padding: 8px 14px;
+            color: #fff;
+            font-size: 13px;
+            text-decoration: none;
+            transition: background 0.2s;
+            backdrop-filter: blur(4px);
+        }
+
+            .login_social_item:hover {
+                background: rgba(232,69,69,0.4);
+                border-color: rgba(232,69,69,0.6);
+                color: #fff;
+            }
+
+            .login_social_item i {
+                font-size: 16px;
+            }
+
+        /* Sağ form paneli */
+        .login_form_side {
+            width: 440px;
+            min-width: 440px;
+            background: #111118;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 48px 40px;
+        }
+
+        .login_box {
+            width: 100%;
+        }
+
+        .login_logo {
+            text-align: center;
+            margin-bottom: 36px;
+        }
+
+            .login_logo img {
+                max-height: 56px;
+                margin-bottom: 16px;
+            }
+
+            .login_logo h3 {
+                color: #fff;
+                font-size: 20px;
+                font-weight: 700;
+                margin-bottom: 6px;
+            }
+
+            .login_logo p {
+                color: #555;
+                font-size: 13px;
+            }
+
+        .form-group label {
+            color: #aaa;
+            font-size: 13px;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .form-control.p_input {
+            background: #1a1a2e !important;
+            border: 1px solid #2a2a4a !important;
+            color: #fff !important;
+            border-radius: 6px;
+            padding: 12px 16px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+            width: 100%;
+        }
+
+            .form-control.p_input:focus {
+                border-color: #e84545 !important;
+                box-shadow: 0 0 0 0.15rem rgba(232,69,69,0.2) !important;
+                outline: none;
+                background: #1a1a2e !important;
+                color: #fff !important;
+            }
+
+            .form-control.p_input::placeholder {
+                color: #444 !important;
+            }
+
+        .remember_row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+
+            .remember_row input[type="checkbox"] {
+                width: 16px;
+                height: 16px;
+                accent-color: #e84545;
+                cursor: pointer;
+            }
+
+            .remember_row label {
+                color: #888;
+                font-size: 13px;
+                cursor: pointer;
+                margin: 0;
+                user-select: none;
+            }
+
+        .btn-login {
+            background: linear-gradient(135deg, #e84545, #c62a88);
+            border: none;
+            color: #fff;
+            width: 100%;
+            padding: 13px;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+            .btn-login:hover {
+                opacity: 0.9;
+            }
+
+            .btn-login:disabled {
+                opacity: 0.6;
+                cursor: not-allowed;
+            }
+
+        .alert-danger {
+            background: rgba(232,69,69,0.12);
+            border: 1px solid rgba(232,69,69,0.4);
+            color: #ff7070;
+            border-radius: 6px;
+            padding: 10px 14px;
+            font-size: 13px;
+            margin-bottom: 20px;
+        }
+
+            .alert-danger ul {
+                margin: 0;
+                padding-left: 16px;
+            }
+
+        .text-danger.small {
+            font-size: 12px;
+            margin-top: 4px;
+            display: block;
+        }
+
+        .login_footer {
+            text-align: center;
+            margin-top: 28px;
+            color: #333;
+            font-size: 12px;
+        }
+
+        @@media (max-width: 768px) {
+            .login_bg_side {
+                display: none;
+            }
+
+            .login_form_side {
+                width: 100%;
+                min-width: unset;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="snowCanvas"></canvas>
+
+    <div class="login_wrapper">
+
+        <!-- Sol panel -->
+        <div class="login_bg_side">
+
+            <!-- Logo üstte -->
+            <div class="login_bg_top">
+           
+            </div>
+
+            <!-- Alt: başlık + sosyal linkler -->
+            <div class="login_bg_bottom">
+             
+
+                <div class="login_social_links">
+
+                    @if (!string.IsNullOrEmpty(ViewBag.WhatsApp as string))
+                    {
+                        <a href="https://wa.me/@waLink" target="_blank" class="login_social_item">
+                            <i class="mdi mdi-whatsapp"></i>
+                            <span>@waFormatted</span>
+                        </a>
+                    }
+                    @if (!string.IsNullOrEmpty(ViewBag.Telegram as string))
+                    {
+                        <a href="https://t.me/@(ViewBag.Telegram as string)" target="_blank" class="login_social_item">
+                            <i class="mdi mdi-telegram"></i>
+                            <span>@ViewBag.Telegram</span>
+                        </a>
+                    }
+                    @if (!string.IsNullOrEmpty(ViewBag.Email as string))
+                    {
+                        <a href="mailto:@ViewBag.Email" class="login_social_item">
+                            <i class="mdi mdi-email-outline"></i>
+                            <span>@ViewBag.Email</span>
+                        </a>
+                    }
+                    @if (!string.IsNullOrEmpty(ViewBag.Discord as string))
+                    {
+                        <a href="@ViewBag.Discord" target="_blank" class="login_social_item">
+                            <i class="mdi mdi-discord"></i>
+                            <span>Discord</span>
+                        </a>
+                    }
+                    @if (!string.IsNullOrEmpty(ViewBag.YouTube as string))
+                    {
+                        <a href="@ViewBag.YouTube" target="_blank" class="login_social_item">
+                            <i class="mdi mdi-youtube"></i>
+                            <span>YouTube</span>
+                        </a>
+                    }
+                    @if (!string.IsNullOrEmpty(ViewBag.Facebook as string))
+                    {
+                        <a href="@ViewBag.Facebook" target="_blank" class="login_social_item">
+                            <i class="mdi mdi-facebook"></i>
+                            <span>Facebook</span>
+                        </a>
+                    }
+
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Sağ form paneli -->
+        <div class="login_form_side">
+            <div class="login_box">
+
+                <div class="login_logo">
+                    <img src="@siteLogo" alt="@siteName" style="max-height:150px">
+                    <h3>Admin Paneli</h3>
+                    <p>Giriş yapmak için bilgilerinizi giriniz</p>
+                </div>
+
+                @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ErrorCount > 0)
+                {
+                    <div class="alert-danger">
+                        <i class="mdi mdi-alert-circle mr-1"></i>
+                        @Html.ValidationSummary(false, "", new { @class = "mb-0" })
+                    </div>
+                }
+
+                @if (TempData["Error"] != null)
+                {
+                    <div class="alert-danger">
+                        <i class="mdi mdi-alert-circle mr-1"></i> @TempData["Error"]
+                    </div>
+                }
+
+                <form asp-action="Index" asp-controller="AdminLogin" method="post" id="loginForm" novalidate>
+                    @Html.AntiForgeryToken()
+
+                    <div class="form-group" style="margin-bottom:18px;">
+                        <label>Email</label>
+                        <input asp-for="Email"
+                               class="form-control p_input"
+                               placeholder="admin@example.com"
+                               autocomplete="off" />
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom:18px;">
+                        <label>Şifre</label>
+                        <div style="position:relative;">
+                            <span id="togglePassword"
+                                  style="position:absolute;left:12px;top:50%;transform:translateY(-50%);
+                                         cursor:pointer;color:#666;z-index:10;">
+                                <i class="mdi mdi-eye" id="eyeIcon"></i>
+                            </span>
+                            <input asp-for="Password"
+                                   type="password"
+                                   class="form-control p_input"
+                                   placeholder="••••••••"
+                                   id="passwordInput"
+                                   autocomplete="off"
+                                   style="padding-left:40px;" />
+                        </div>
+                        <span asp-validation-for="Password" class="text-danger small"></span>
+                    </div>
+
+                    <div class="remember_row">
+                        <input asp-for="RememberMe" type="checkbox" id="rememberMe" />
+                        <label for="rememberMe">Beni hatırla <span style="color:#555;">(30 gün)</span></label>
+                    </div>
+
+                    <button type="submit" id="loginBtn" class="btn-login">
+                        <i class="mdi mdi-login mr-1"></i> Giriş Yap
+                    </button>
+                </form>
+
+                <div class="login_footer">
+                    &copy; @DateTime.Now.Year @siteName. Tüm hakları saklıdır.
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <script src="~/adminThema/assets/vendors/js/vendor.bundle.base.js"></script>
+    <script src="~/adminThema/assets/js/off-canvas.js"></script>
+    <script src="~/adminThema/assets/js/misc.js"></script>
+    <script>
+        // Şifre göster/gizle
+        document.getElementById('togglePassword').addEventListener('click', function () {
+            var input = document.getElementById('passwordInput');
+            var icon  = document.getElementById('eyeIcon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.replace('mdi-eye', 'mdi-eye-off');
+            } else {
+                input.type = 'password';
+                icon.classList.replace('mdi-eye-off', 'mdi-eye');
+            }
+        });
+
+        // Submit butonu loading
+        document.getElementById('loginForm').addEventListener('submit', function () {
+            var btn = document.getElementById('loginBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="mdi mdi-loading mdi-spin mr-1"></i> Giriş yapılıyor...';
+        });
+
+        // Kar efekti
+        (function () {
+            var canvas = document.getElementById('snowCanvas');
+            var ctx    = canvas.getContext('2d');
+            var flakes = [];
+            var count  = 60;
+
+            function resize() {
+                canvas.width  = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+
+            function random(min, max) {
+                return Math.random() * (max - min) + min;
+            }
+
+            function init() {
+                resize();
+                flakes = [];
+                for (var i = 0; i < count; i++) {
+                    flakes.push({
+                        x:     random(0, canvas.width),
+                        y:     random(0, canvas.height),
+                        r:     random(1, 2.5),
+                        speed: random(0.3, 1.2),
+                        wind:  random(-0.2, 0.2),
+                        alpha: random(0.4, 0.9)
+                    });
+                }
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                flakes.forEach(function (f) {
+                    ctx.beginPath();
+                    ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(255,255,255,' + f.alpha + ')';
+                    ctx.fill();
+                    f.y += f.speed;
+                    f.x += f.wind;
+                    if (f.y > canvas.height + 10) { f.y = -10; f.x = random(0, canvas.width); }
+                    if (f.x > canvas.width  + 10)   f.x = -10;
+                    if (f.x < -10)                   f.x = canvas.width + 10;
+                });
+                requestAnimationFrame(draw);
+            }
+
+            window.addEventListener('resize', resize);
+            init();
+            draw();
+        })();
+    </script>
+</body>
+</html>

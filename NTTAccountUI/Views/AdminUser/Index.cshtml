@@ -1,0 +1,235 @@
+﻿@model IEnumerable<NTTAccountUI.Models.Entities.User>
+
+@{
+    ViewData["Title"] = "Kullanıcı Yönetimi";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    // Korumalı kullanıcı - hiç kimse müdahale edemez
+    const string ProtectedEmail = "admin@dogukankosan.com";
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show mb-4">
+        <i class="mdi mdi-check-circle mr-2"></i> @TempData["Success"]
+        <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show mb-4">
+        <i class="mdi mdi-alert-circle mr-2"></i> @TempData["Error"]
+        <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+    </div>
+}
+
+<div class="row mb-4">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <h4 class="mb-0" style="color:#fff;">
+            Kullanıcılar
+            <span class="badge badge-warning ml-2">@Model.Count() Kayıt</span>
+        </h4>
+        <a href="/AdminUser/Create" class="btn btn-primary">
+            <i class="mdi mdi-plus mr-1"></i> Yeni Kullanıcı
+        </a>
+    </div>
+</div>
+
+<!-- Arama -->
+<div class="card mb-4">
+    <div class="card-body py-3">
+        <div class="row align-items-center">
+            <div class="col-md-4">
+                <input type="text" id="searchInput" class="form-control" placeholder="Email veya not ile ara...">
+            </div>
+            <div class="col-md-3">
+                <select id="roleFilter" class="form-control">
+                    <option value="">Tüm Roller</option>
+                    <option value="Admin">Admin</option>
+                    <option value="User">User</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select id="statusFilter" class="form-control">
+                    <option value="">Tüm Durumlar</option>
+                    <option value="Aktif">Aktif</option>
+                    <option value="Pasif">Pasif</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-outline-secondary btn-block" id="clearFilter">
+                    <i class="mdi mdi-close mr-1"></i> Temizle
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table" id="usersTable">
+                <thead>
+                    <tr>
+                        <th style="width:50px;">Foto</th>
+                        <th>Email</th>
+                        <th style="width:90px;">Rol</th>
+                        <th style="width:90px;">Durum</th>
+                        <th>Not</th>
+                        <th>Son Giriş</th>
+                        <th style="width:120px;">İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">Kullanıcı bulunamadı.</td>
+                        </tr>
+                    }
+                    @foreach (var user in Model)
+                    {
+                        var isProtected = user.Email.ToLower() == ProtectedEmail.ToLower();
+                        <tr data-email="@user.Email.ToLower()"
+                            data-role="@(user.RoleId == 1 ? "Admin" : "User")"
+                            data-status="@(user.IsActive ? "Aktif" : "Pasif")">
+                            <td>
+                                @if (!string.IsNullOrEmpty(user.ProfileImage))
+                                {
+                                    <img src="@user.ProfileImage" alt="@user.Email"
+                                         style="width:36px;height:36px;border-radius:50%;object-fit:cover;" />
+                                }
+                                else
+                                {
+                                    <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#e84545,#c62a88);display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;">
+                                        <i class="mdi mdi-account"></i>
+                                    </div>
+                                }
+                            </td>
+                            <td style="color:#fff;">
+                                @user.Email
+                                @if (isProtected)
+                                {
+                                    <i class="mdi mdi-shield-check text-warning ml-1" title="Korumalı Kullanıcı"></i>
+                                }
+                            </td>
+                            <td>
+                                @if (user.RoleId == 1)
+                                {
+                                    <span class="badge badge-danger">Admin</span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-info">User</span>
+                                }
+                            </td>
+                            <td>
+                                @if (user.IsActive)
+                                {
+                                    <span class="badge badge-success">Aktif</span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-danger">Pasif</span>
+                                }
+                            </td>
+                            <td class="text-muted small" style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                                @user.Note
+                            </td>
+                            <td class="text-muted small">
+                                @(user.LastLoginAt.HasValue? user.LastLoginAt.Value.ToTurkeyTimeString() : "-")
+                            </td>
+                            <td>
+                                @if (!isProtected)
+                                {
+                                    <a href="/AdminUser/Edit/@user.Id" class="btn btn-sm btn-outline-primary mr-1" title="Düzenle">
+                                        <i class="mdi mdi-pencil"></i>
+                                    </a>
+
+                                    <form asp-action="Delete" asp-controller="AdminUser"
+                                          method="post" style="display:inline;"
+                                          class="delete-form" data-email="@user.Email">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@user.Id" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Sil">
+                                            <i class="mdi mdi-delete"></i>
+                                        </button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <span class="text-warning small"><i class="mdi mdi-lock"></i></span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <p class="text-muted small mt-2" id="noResult" style="display:none;">Arama sonucu bulunamadı.</p>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Arama ve filtreleme
+        function filterTable() {
+            var search = $('#searchInput').val().toLowerCase();
+            var role   = $('#roleFilter').val();
+            var status = $('#statusFilter').val();
+            var count  = 0;
+
+            $('#usersTable tbody tr').each(function () {
+                var email     = $(this).data('email') || '';
+                var note      = $(this).find('td:eq(4)').text().toLowerCase();
+                var rowRole   = $(this).data('role') || '';
+                var rowStatus = $(this).data('status') || '';
+
+                var matchSearch = !search || email.includes(search) || note.includes(search);
+                var matchRole   = !role   || rowRole === role;
+                var matchStatus = !status || rowStatus === status;
+
+                if (matchSearch && matchRole && matchStatus) {
+                    $(this).show();
+                    count++;
+                } else {
+                    $(this).hide();
+                }
+            });
+
+            $('#noResult').toggle(count === 0);
+        }
+
+        $('#searchInput, #roleFilter, #statusFilter').on('input change', filterTable);
+
+        $('#clearFilter').on('click', function () {
+            $('#searchInput').val('');
+            $('#roleFilter').val('');
+            $('#statusFilter').val('');
+            filterTable();
+        });
+
+        // SweetAlert2 silme
+        document.querySelectorAll('.delete-form').forEach(function (form) {
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                var email = this.getAttribute('data-email');
+                var submitForm = this;
+                Swal.fire({
+                    title: 'Emin misiniz?',
+                    text: '"' + email + '" kullanıcısı silinecek!',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#e84545',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Evet, Sil!',
+                    cancelButtonText: 'İptal',
+                    background: '#1a1a2e',
+                    color: '#fff'
+                }).then(function (result) {
+                    if (result.isConfirmed) submitForm.submit();
+                });
+            });
+        });
+    </script>
+}

@@ -1,0 +1,102 @@
+﻿@using NTTAccountUI.Helpers
+@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var user = ViewBag.CurrentUser as NTTAccountUI.Models.Entities.User;
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+
+        <!-- Hoş Geldin Kartı -->
+        <div class="card mb-4" style="background:linear-gradient(135deg,#1a1a2e,#16213e);border:1px solid #2a2a4a;">
+            <div class="card-body text-center py-5">
+                @if (!string.IsNullOrEmpty(user?.ProfileImage))
+                {
+                    <img src="@user.ProfileImage"
+                         style="width:90px;height:90px;border-radius:50%;object-fit:cover;border:3px solid #e84545;margin-bottom:16px;" />
+                }
+                else
+                {
+                    <div style="width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,#e84545,#c62a88);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+                        <i class="mdi mdi-account" style="font-size:42px;color:#fff;"></i>
+                    </div>
+                }
+
+                <h4 style="color:#fff;margin-bottom:6px;">Hoş Geldiniz!</h4>
+                <p style="color:#e84545;font-size:14px;margin-bottom:4px;">@(user?.Email ?? ViewBag.AdminEmail ?? "")</p>
+                <span class="badge badge-info">Kullanıcı</span>
+
+                @if (user?.LastLoginAt.HasValue == true)
+                {
+                    <p class="text-muted small mt-3 mb-0">
+                        <i class="mdi mdi-clock-outline mr-1"></i>
+                        Son giriş: @user.LastLoginAt.Value.ToTurkeyTimeString("dd.MM.yyyy HH:mm")
+                    </p>
+                }
+            </div>
+        </div>
+
+        <!-- Bilgi Kartları -->
+        <div class="row mb-4">
+            <div class="col-sm-6 mb-3">
+                <div class="card text-center" style="border:1px solid #2a2a4a;">
+                    <div class="card-body py-4">
+                        <i class="mdi mdi-account-circle" style="font-size:32px;color:#e84545;display:block;margin-bottom:8px;"></i>
+                        <h6 style="color:#fff;margin-bottom:4px;">Profilim</h6>
+                        <p class="text-muted small mb-3">Bilgilerinizi güncelleyin</p>
+                        <a href="/Profile" class="btn btn-sm btn-outline-primary">Düzenle</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 mb-3">
+                <div class="card text-center" style="border:1px solid #2a2a4a;">
+                    <div class="card-body py-4">
+                        <i class="mdi mdi-email-outline" style="font-size:32px;color:#e84545;display:block;margin-bottom:8px;"></i>
+                        <h6 style="color:#fff;margin-bottom:4px;">İletişim</h6>
+                        <p class="text-muted small mb-3">Destek için bize ulaşın</p>
+                        <a href="/Contact" target="_blank" class="btn btn-sm btn-outline-primary">Ulaş</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hesap Bilgileri -->
+        <div class="card">
+            <div class="card-body">
+                <h5 style="color:#fff;margin-bottom:20px;">Hesap Bilgileri</h5>
+
+                <div style="padding:12px 0;border-bottom:1px solid #1e1e30;display:flex;justify-content:space-between;">
+                    <span class="text-muted small">Email</span>
+                    <span style="color:#fff;font-size:13px;">@(user?.Email ?? "-")</span>
+                </div>
+                <div style="padding:12px 0;border-bottom:1px solid #1e1e30;display:flex;justify-content:space-between;">
+                    <span class="text-muted small">Rol</span>
+                    <span class="badge badge-info">Kullanıcı</span>
+                </div>
+                <div style="padding:12px 0;border-bottom:1px solid #1e1e30;display:flex;justify-content:space-between;">
+                    <span class="text-muted small">Durum</span>
+                    <span class="badge badge-success">Aktif</span>
+                </div>
+                <div style="padding:12px 0;border-bottom:1px solid #1e1e30;display:flex;justify-content:space-between;">
+                    <span class="text-muted small">Kayıt Tarihi</span>
+                    <span style="color:#fff;font-size:13px;">@(user?.CreatedAt.ToTurkeyTimeString("dd.MM.yyyy") ?? "-")</span>
+                </div>
+                @if (!string.IsNullOrEmpty(user?.Note))
+                {
+                    <div style="padding:12px 0;display:flex;justify-content:space-between;">
+                        <span class="text-muted small">Not</span>
+                        <span style="color:#fff;font-size:13px;">@user.Note</span>
+                    </div>
+                }
+
+                <div class="mt-4">
+                    <a href="/Profile" class="btn btn-primary btn-block">
+                        <i class="mdi mdi-account-edit mr-1"></i> Profili Düzenle
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>

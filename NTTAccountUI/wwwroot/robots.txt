@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+Disallow: /AdminHome
+Disallow: /AdminUser
+Disallow: /AdminContact
+Disallow: /AdminLog
+Disallow: /AdminSiteSettings
+Disallow: /AdminBannerSlide
+Disallow: /AdminMailSettings
+Disallow: /AdminLogin
+Disallow: /Profile
+
+Sitemap: https://ntthesap.com/sitemap.xml

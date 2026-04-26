@@ -1,0 +1,583 @@
+﻿@{
+    var raw = ViewBag.WhatsApp as string ?? "";
+    var digits = System.Text.RegularExpressions.Regex.Replace(raw, @"\D", "");
+    if (digits.StartsWith("90")) digits = digits.Substring(2);
+    if (digits.StartsWith("0")) digits = digits.Substring(1);
+    if (digits.Length > 10) digits = digits.Substring(0, 10);
+    var formatted = digits.Length == 10
+        ? $"{digits.Substring(0, 3)} {digits.Substring(3, 3)} {digits.Substring(6, 2)} {digits.Substring(8, 2)}"
+        : digits;
+    var waLink = "90" + digits;
+}
+
+<html lang="tr">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>@ViewData["Title"] - @(ViewBag.SiteName ?? "NTT Hesap")</title>
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="@(ViewBag.SiteDescription ?? ViewBag.SiteName ?? "NTT Hesap - Knight Online Private Server")">
+    <meta name="keywords" content="@(ViewBag.SiteName ?? "NTT Hesap"), Knight Online, Private Server, Knight Online Hesap">
+    <meta name="author" content="@(ViewBag.SiteName ?? "NTT Hesap")">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="@(ViewBag.SiteUrl ?? "/")">
+
+    <!-- Open Graph (Facebook, Discord önizleme) -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="@(ViewBag.SiteUrl ?? "/")">
+    <meta property="og:title" content="@ViewData["Title"] - @(ViewBag.SiteName ?? "NTT Hesap")">
+    <meta property="og:description" content="@(ViewBag.SiteDescription ?? ViewBag.SiteName ?? "NTT Hesap")">
+    <meta property="og:image" content="@(ViewBag.SiteLogo ?? "/img/knight.png")">
+    <meta property="og:locale" content="tr_TR">
+    <meta property="og:site_name" content="@(ViewBag.SiteName ?? "NTT Hesap")">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="@ViewData["Title"] - @(ViewBag.SiteName ?? "NTT Hesap")">
+    <meta name="twitter:description" content="@(ViewBag.SiteDescription ?? ViewBag.SiteName ?? "NTT Hesap")">
+    <meta name="twitter:image" content="@(ViewBag.SiteLogo ?? "/img/knight.png")">
+
+    <link rel="icon" href="@(string.IsNullOrEmpty(ViewBag.SiteIcon as string) ? "~/UserThema/img/favicon.png" : ViewBag.SiteIcon)">
+    <link rel="stylesheet" href="~/UserThema/css/bootstrap.min.css">
+    <link rel="stylesheet" href="~/UserThema/css/animate.css">
+    <link rel="stylesheet" href="~/UserThema/css/owl.carousel.min.css">
+    <link rel="stylesheet" href="~/UserThema/css/all.css">
+    <link rel="stylesheet" href="~/UserThema/css/flaticon.css">
+    <link rel="stylesheet" href="~/UserThema/css/themify-icons.css">
+    <link rel="stylesheet" href="~/UserThema/css/magnific-popup.css">
+    <link rel="stylesheet" href="~/UserThema/css/slick.css">
+    <link rel="stylesheet" href="~/UserThema/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&display=swap" rel="stylesheet">
+    <style>
+        .btn_1 {
+            font-family: 'Cinzel', serif !important;
+            font-size: 14px !important;
+            letter-spacing: 2px !important;
+            text-transform: uppercase !important;
+        }
+
+        ::selection {
+            background: #ff4d4d;
+            color: #fff;
+        }
+
+        #snowCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        .footer_contact_item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+            color: #b3b3b3;
+            font-size: 14px;
+            text-decoration: none;
+            transition: all 0.25s ease;
+        }
+
+            .footer_contact_item:hover {
+                color: #fff;
+                transform: translateX(4px);
+            }
+
+            .footer_contact_item i {
+                width: 30px;
+                height: 30px;
+                background: #1a1a2e;
+                border: 1px solid #2a2a4a;
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 13px;
+                color: #e84545;
+                flex-shrink: 0;
+                transition: all 0.25s ease;
+            }
+
+            .footer_contact_item:hover i {
+                background: #e84545;
+                color: #fff;
+                border-color: transparent;
+            }
+
+        .footer_about_text {
+            color: #888;
+            font-size: 13px;
+            line-height: 1.7;
+            margin-top: 12px;
+        }
+
+        .footer_links {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+            .footer_links li {
+                margin-bottom: 10px;
+            }
+
+                .footer_links li a {
+                    color: #888;
+                    font-size: 14px;
+                    text-decoration: none;
+                    transition: color 0.2s, padding-left 0.2s;
+                    display: inline-block;
+                }
+
+                    .footer_links li a:hover {
+                        color: #e84545;
+                        padding-left: 5px;
+                    }
+
+        .social_icon_list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 0;
+            margin: 10px 0 0 0;
+            list-style: none;
+        }
+
+        .single_social_icon {
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            background: #1a1a2e;
+            border: 1px solid #2a2a4a;
+            color: #aaa;
+            font-size: 17px;
+            transition: all 0.25s ease;
+            text-decoration: none;
+        }
+
+            .single_social_icon:hover {
+                transform: translateY(-4px);
+                color: #fff;
+                border-color: transparent;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.45);
+            }
+
+                .single_social_icon:hover .fa-facebook-f {
+                    color: #1877f2;
+                }
+
+                .single_social_icon:hover .fa-discord {
+                    color: #5865f2;
+                }
+
+                .single_social_icon:hover .fa-youtube {
+                    color: #ff0000;
+                }
+
+                .single_social_icon:hover .fa-whatsapp {
+                    color: #25d366;
+                }
+
+                .single_social_icon:hover .fa-telegram-plane {
+                    color: #229ED9;
+                }
+
+        /* ── Çerez Banner ── */
+        #cookieBanner {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 99999;
+            background: #111118;
+            border-top: 2px solid #e84545;
+            padding: 18px 24px;
+            display: none;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
+        }
+
+        .cookie-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .cookie-text {
+            color: #ccc;
+            font-size: 13px;
+            line-height: 1.6;
+            flex: 1;
+            min-width: 250px;
+        }
+
+            .cookie-text a {
+                color: #e84545;
+                text-decoration: underline;
+            }
+
+        .cookie-buttons {
+            display: flex;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .cookie-accept {
+            background: linear-gradient(135deg, #e84545, #c62a88);
+            color: #fff;
+            border: none;
+            padding: 9px 22px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+            .cookie-accept:hover {
+                opacity: 0.85;
+            }
+
+        .cookie-reject {
+            background: transparent;
+            color: #888;
+            border: 1px solid #333;
+            padding: 9px 22px;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+            .cookie-reject:hover {
+                border-color: #666;
+                color: #ccc;
+            }
+    </style>
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+
+<body>
+    <canvas id="snowCanvas"></canvas>
+
+    <div class="body_bg">
+
+        <header class="main_menu single_page_menu">
+            <div class="container">
+                <div class="row align-items-center">
+                    <div class="col-lg-12">
+                        <nav class="navbar navbar-expand-lg navbar-light">
+                            <a class="navbar-brand" href="/">
+                                @if (!string.IsNullOrEmpty(ViewBag.SiteLogo as string))
+                                {
+                                    <img src="@ViewBag.SiteLogo" alt="@ViewBag.SiteName" style="max-height:160px;">
+                                }
+                                else
+                                {
+                                    <img src="~/UserThema/img/logo.png" alt="NTT Hesap">
+                                }
+                            </a>
+                            <button class="navbar-toggler" type="button" data-toggle="collapse"
+                                    data-target="#navbarSupportedContent"
+                                    aria-controls="navbarSupportedContent"
+                                    aria-expanded="false" aria-label="Toggle navigation">
+                                <span class="menu_icon"><i class="fas fa-bars"></i></span>
+                            </button>
+                            <div class="collapse navbar-collapse main-menu-item" id="navbarSupportedContent">
+                                <ul class="navbar-nav">
+                                    <li class="nav-item"><a class="nav-link" href="/">Ana Sayfa</a></li>
+                                    <li class="nav-item"><a class="nav-link" href="/News">Haberler</a></li>
+                                    <li class="nav-item"><a class="nav-link" href="/Contact">İletişim</a></li>
+                                </ul>
+                            </div>
+                            <a href="/AdminHome" class="btn_1 d-none d-sm-block">Giriş Yap</a>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        @RenderBody()
+
+        <footer class="footer_part">
+            <div class="footer_top">
+                <div class="container">
+                    <div class="row">
+
+                        <!-- Hakkında -->
+                        <div class="col-sm-6 col-lg-3">
+                            <div class="single_footer_part">
+                                <a href="/" class="footer_logo_iner">
+                                    @if (!string.IsNullOrEmpty(ViewBag.SiteLogo as string))
+                                    {
+                                        <img src="@ViewBag.SiteLogo" alt="@ViewBag.SiteName" style="max-height:160px;">
+                                    }
+                                    else
+                                    {
+                                        <img src="~/UserThema/img/logo.png" alt="NTT Hesap">
+                                    }
+                                </a>
+                                @if (!string.IsNullOrEmpty(ViewBag.SiteDescription as string))
+                                {
+                                    <p class="footer_about_text">@ViewBag.SiteDescription</p>
+                                }
+                                else
+                                {
+                                    <p class="footer_about_text">@(ViewBag.AboutText ?? "Knight Online")</p>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- İletişim -->
+                        <div class="col-sm-6 col-lg-3">
+                            <div class="single_footer_part">
+                                <h4>İletişim</h4>
+                                @if (!string.IsNullOrEmpty(ViewBag.Email as string))
+                                {
+                                    <a href="mailto:@ViewBag.Email" class="footer_contact_item">
+                                        <i class="fas fa-envelope"></i>
+                                        <span>@ViewBag.Email</span>
+                                    </a>
+                                }
+                                @if (!string.IsNullOrEmpty(ViewBag.WhatsApp as string))
+                                {
+                                    <a href="https://wa.me/@waLink" target="_blank" class="footer_contact_item">
+                                        <i class="fab fa-whatsapp"></i>
+                                        <span>+90 @formatted</span>
+                                    </a>
+                                }
+                                @if (!string.IsNullOrEmpty(ViewBag.Telegram as string))
+                                {
+                                    <a href="https://t.me/@(ViewBag.Telegram as string ?? "")" target="_blank" class="footer_contact_item">
+                                        <i class="fab fa-telegram-plane"></i>
+                                        <span>@ViewBag.Telegram</span>
+                                    </a>
+                                }
+                                @if (!string.IsNullOrEmpty(ViewBag.Discord as string))
+                                {
+                                    <a href="@ViewBag.Discord" target="_blank" class="footer_contact_item">
+                                        <i class="fab fa-discord"></i>
+                                        <span>Discord Sunucusu</span>
+                                    </a>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Hızlı Linkler -->
+                        <div class="col-sm-6 col-lg-3">
+                            <div class="single_footer_part">
+                                <h4>Hızlı Linkler</h4>
+                                <ul class="footer_links">
+                                    <li><a href="/">Ana Sayfa</a></li>
+                                    <li><a href="/AdminHome">Giriş Yap</a></li>
+                                    <li><a href="/News">Haberler</a></li>
+                                    <li><a href="/Contact">İletişim</a></li>
+                                    <li><a href="/Privacy">Gizlilik Politikası</a></li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Sosyal Medya -->
+                        <div class="col-sm-6 col-lg-3">
+                            <div class="single_footer_part">
+                                <h4>Sosyal Medya</h4>
+                                <div class="footer_icon social_icon">
+                                    <ul class="social_icon_list">
+                                        @if (!string.IsNullOrEmpty(ViewBag.Facebook as string))
+                                        {
+                                            <li>
+                                                <a href="@ViewBag.Facebook" class="single_social_icon" target="_blank" title="Facebook">
+                                                    <i class="fab fa-facebook-f"></i>
+                                                </a>
+                                            </li>
+                                        }
+                                        @if (!string.IsNullOrEmpty(ViewBag.Discord as string))
+                                        {
+                                            <li>
+                                                <a href="@ViewBag.Discord" class="single_social_icon" target="_blank" title="Discord">
+                                                    <i class="fab fa-discord"></i>
+                                                </a>
+                                            </li>
+                                        }
+                                        @if (!string.IsNullOrEmpty(ViewBag.YouTube as string))
+                                        {
+                                            <li>
+                                                <a href="@ViewBag.YouTube" class="single_social_icon" target="_blank" title="YouTube">
+                                                    <i class="fab fa-youtube"></i>
+                                                </a>
+                                            </li>
+                                        }
+                                        @if (!string.IsNullOrEmpty(ViewBag.WhatsApp as string))
+                                        {
+                                            <li>
+                                                <a href="https://wa.me/@waLink" class="single_social_icon" target="_blank" title="WhatsApp">
+                                                    <i class="fab fa-whatsapp"></i>
+                                                </a>
+                                            </li>
+                                        }
+                                        @if (!string.IsNullOrEmpty(ViewBag.Telegram as string))
+                                        {
+                                            <li>
+                                                <a href="https://t.me/@(ViewBag.Telegram as string ?? "")" class="single_social_icon" target="_blank" title="Telegram">
+                                                    <i class="fab fa-telegram-plane"></i>
+                                                </a>
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <div class="copygight_text">
+                <div class="container">
+                    <div class="row align-items-center">
+                        <div class="col-lg-12 text-center">
+                            <p>
+                                &copy; @DateTime.Now.Year @(ViewBag.SiteName ?? "NTT Hesap"). Tüm hakları saklıdır.
+                                &nbsp;|&nbsp;
+                                <a href="/Privacy" style="color:#e84545;">Gizlilik Politikası</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- Çerez Banner -->
+    <div id="cookieBanner">
+        <div class="cookie-inner">
+            <div class="cookie-text">
+                <!-- YENİ -->
+                <strong style="color:#fff;">🍪 Çerez Politikası</strong>
+                <p style="margin:6px 0 0 0;">
+                    Bu site, daha iyi bir deneyim sunmak için çerezler kullanmaktadır.
+                    Siteyi kullanmaya devam ederek çerez politikamızı kabul etmiş sayılırsınız.
+                    Daha fazla bilgi için <a href="/Privacy">Gizlilik Politikası</a>'nı inceleyebilirsiniz.
+                </p>
+            </div>
+            <div class="cookie-buttons">
+                <button class="cookie-accept" onclick="acceptCookies()">Kabul Et</button>
+                <button class="cookie-reject" onclick="rejectCookies()">Reddet</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="~/UserThema/js/jquery-1.12.1.min.js"></script>
+    <script src="~/UserThema/js/popper.min.js"></script>
+    <script src="~/UserThema/js/bootstrap.min.js"></script>
+    <script src="~/UserThema/js/jquery.magnific-popup.js"></script>
+    <script src="~/UserThema/js/swiper.min.js"></script>
+    <script src="~/UserThema/js/masonry.pkgd.js"></script>
+    <script src="~/UserThema/js/owl.carousel.min.js"></script>
+    <script src="~/UserThema/js/jquery.nice-select.min.js"></script>
+    <script src="~/UserThema/js/slick.min.js"></script>
+    <script src="~/UserThema/js/jquery.counterup.min.js"></script>
+    <script src="~/UserThema/js/waypoints.min.js"></script>
+    <script src="~/UserThema/js/jquery.ajaxchimp.min.js"></script>
+    <script src="~/UserThema/js/jquery.form.js"></script>
+    <script src="~/UserThema/js/jquery.validate.min.js"></script>
+    <script src="~/UserThema/js/custom.js"></script>
+
+    <!-- Kar efekti -->
+    <script>
+        (function () {
+            var canvas = document.getElementById('snowCanvas');
+            var ctx    = canvas.getContext('2d');
+            var flakes = [];
+            var count  = 60;
+
+            function resize() {
+                canvas.width  = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+
+            function random(min, max) { return Math.random() * (max - min) + min; }
+
+            function init() {
+                resize();
+                flakes = [];
+                for (var i = 0; i < count; i++) {
+                    flakes.push({
+                        x: random(0, canvas.width), y: random(0, canvas.height),
+                        r: random(1, 2.5), speed: random(0.3, 1.2),
+                        wind: random(-0.2, 0.2), alpha: random(0.5, 1)
+                    });
+                }
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                flakes.forEach(function (f) {
+                    ctx.beginPath();
+                    ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(255,255,255,' + f.alpha + ')';
+                    ctx.fill();
+                    f.y += f.speed;
+                    f.x += f.wind;
+                    if (f.y > canvas.height + 10) { f.y = -10; f.x = random(0, canvas.width); }
+                    if (f.x > canvas.width  + 10) f.x = -10;
+                    if (f.x < -10) f.x = canvas.width + 10;
+                });
+                requestAnimationFrame(draw);
+            }
+
+            window.addEventListener('resize', resize);
+            init();
+            draw();
+        })();
+    </script>
+
+    <!-- Çerez banner JS -->
+    <script>
+        function getCookie(name) {
+            var match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+            return match ? match[2] : null;
+        }
+
+        function setCookie(name, value, days) {
+            var d = new Date();
+            d.setTime(d.getTime() + days * 24 * 60 * 60 * 1000);
+            document.cookie = name + '=' + value + ';expires=' + d.toUTCString() + ';path=/;SameSite=Lax';
+        }
+
+        function acceptCookies() {
+            setCookie('cookie_consent', 'accepted', 30);
+            document.getElementById('cookieBanner').style.display = 'none';
+        }
+
+        function rejectCookies() {
+            setCookie('cookie_consent', 'rejected', 30);
+            document.getElementById('cookieBanner').style.display = 'none';
+        }
+
+        // Sayfa yüklenince kontrol et
+        window.addEventListener('load', function () {
+            var consent = getCookie('cookie_consent');
+            if (!consent) {
+                setTimeout(function () {
+                    document.getElementById('cookieBanner').style.display = 'block';
+                }, 1000);
+            }
+        });
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

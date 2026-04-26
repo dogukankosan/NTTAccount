@@ -1,0 +1,314 @@
+﻿<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>@ViewData["Title"] - @(ViewBag.SiteName ?? "NTT Hesap") Admin</title>
+    <link rel="icon" href="@(string.IsNullOrEmpty(ViewBag.SiteIcon as string) ? "~/UserThema/img/favicon.png" : ViewBag.SiteIcon)">
+    <link rel="stylesheet" href="~/adminThema/assets/vendors/mdi/css/materialdesignicons.min.css">
+    <link rel="stylesheet" href="~/adminThema/assets/vendors/css/vendor.bundle.base.css">
+    <link rel="stylesheet" href="~/adminThema/assets/vendors/jvectormap/jquery-jvectormap.css">
+    <link rel="stylesheet" href="~/adminThema/assets/vendors/flag-icon-css/css/flag-icon.min.css">
+    <link rel="stylesheet" href="~/adminThema/assets/vendors/owl-carousel-2/owl.carousel.min.css">
+    <link rel="stylesheet" href="~/adminThema/assets/vendors/owl-carousel-2/owl.theme.default.min.css">
+    <link rel="stylesheet" href="~/adminThema/assets/css/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@@mdi/font/css/materialdesignicons.min.css">
+    @await RenderSectionAsync("Styles", required: false)
+    <style>
+        ::selection {
+            background: #ff4d4d;
+            color: #fff;
+        }
+    </style>
+</head>
+
+<body>
+    @{
+        var currentController = ViewContext.RouteData.Values["controller"]?.ToString()?.ToLower() ?? "";
+        var unreadCount = ViewBag.UnreadContactCount as int? ?? 0;
+        var adminRoleId = ViewBag.AdminRoleId as int? ?? 2;
+        var isAdmin = adminRoleId == 1;
+    }
+
+    <div class="container-scroller">
+
+        <!-- Sidebar -->
+        <nav class="sidebar sidebar-offcanvas" id="sidebar">
+
+            <div class="sidebar-brand-wrapper d-none d-lg-flex align-items-center justify-content-center fixed-top">
+             
+                <a class="sidebar-brand brand-logo" href="/AdminHome">
+                    @if (!string.IsNullOrEmpty(ViewBag.SiteLogo as string))
+                    {
+                        <img src="@ViewBag.SiteLogo"
+                             alt="@ViewBag.SiteName"
+                             style="max-height:106px; height:106px; width:auto;margin-top:20px" />
+                  
+                    }
+                    else
+                    {
+                        <img src="~/UserThema/img/logo.png" alt="NTT Hesap" style="max-height:36px;" />
+                    }
+                </a>   
+
+                <a class="sidebar-brand brand-logo-mini" href="/AdminHome">
+                    @if (!string.IsNullOrEmpty(ViewBag.SiteIcon as string))
+                    {
+                        <img src="@ViewBag.SiteIcon" style="max-height:28px;" />
+                    }
+                    else
+                    {
+                        <img src="~/adminThema/assets/images/logo-mini.svg" alt="logo" />
+                    }
+                </a>
+
+            </div>
+
+            <ul class="nav">
+                <!-- Profil -->
+                <br />
+
+                <li class="nav-item profile">
+                    <div class="profile-desc">
+                        <div class="profile-pic">
+                            <div class="count-indicator">
+                                @if (!string.IsNullOrEmpty(ViewBag.AdminProfileImage as string))
+                                {
+                                    <img src="@ViewBag.AdminProfileImage"
+                                         style="width:35px;height:35px;border-radius:50%;object-fit:cover;" />
+                                }
+                                else
+                                {
+                                    <div style="width:35px;height:35px;border-radius:50%;background:linear-gradient(135deg,#e84545,#c62a88);display:flex;align-items:center;justify-content:center;color:#fff;">
+                                        <i class="mdi mdi-account"></i>
+                                    </div>
+                                }
+                            </div>
+                            <div class="profile-name">
+                                <h5 class="mb-0 font-weight-normal" style="font-size:12px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                                    @(ViewBag.AdminEmail ?? "Kullanıcı")
+                                </h5>
+                                <span>@(isAdmin ? "Admin" : "User")</span>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+
+                <!-- Ana Menü - Herkes görür -->
+                <li class="nav-item nav-category"><span class="nav-link">Ana Menü</span></li>
+                <li class="nav-item menu-items @(currentController == "adminhome" ? "active" : "")">
+                    <a class="nav-link" href="/AdminHome">
+                        <span class="menu-icon"><i class="mdi mdi-speedometer"></i></span>
+                        <span class="menu-title">Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item menu-items @(currentController == "profile" ? "active" : "")">
+                    <a class="nav-link" href="/Profile">
+                        <span class="menu-icon"><i class="mdi mdi-account-circle"></i></span>
+                        <span class="menu-title">Profilim</span>
+                    </a>
+                </li>
+
+                <!-- Yönetim - Sadece Admin -->
+                @if (isAdmin)
+                {
+                    <li class="nav-item nav-category"><span class="nav-link">Yönetim</span></li>
+                    <li class="nav-item menu-items @(currentController == "adminuser" ? "active" : "")">
+                        <a class="nav-link" href="/AdminUser">
+                            <span class="menu-icon"><i class="mdi mdi-account-multiple"></i></span>
+                            <span class="menu-title">Kullanıcılar</span>
+                        </a>
+                    </li>
+                    <li class="nav-item menu-items @(currentController == "admincontact" ? "active" : "")">
+                        <a class="nav-link" href="/AdminContact">
+                            <span class="menu-icon"><i class="mdi mdi-email"></i></span>
+                            <span class="menu-title">
+                                İletişim Mesajları
+                                @if (unreadCount > 0)
+                                {
+                                    <span class="badge badge-danger badge-pill ml-1" style="font-size:10px;">@unreadCount</span>
+                                }
+                            </span>
+                        </a>
+                    </li>
+                    <li class="nav-item menu-items @(currentController == "adminsitesettings" ? "active" : "")">
+                        <a class="nav-link" href="/AdminSiteSettings">
+                            <span class="menu-icon"><i class="mdi mdi-settings"></i></span>
+                            <span class="menu-title">Site Ayarları</span>
+                        </a>
+                    </li>
+                    <li class="nav-item menu-items @(currentController == "adminbannerslide" ? "active" : "")">
+                        <a class="nav-link" href="/AdminBannerSlide">
+                            <span class="menu-icon"><i class="mdi mdi-image-multiple"></i></span>
+                            <span class="menu-title">Banner Yönetimi</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item nav-category"><span class="nav-link">Sistem</span></li>
+                     <li class="nav-item menu-items @(currentController == "adminmailsettings" ? "active" : "")">
+                         <a class="nav-link" href="/AdminMailSettings">
+                             <span class="menu-icon"><i class="mdi mdi-email-fast"></i></span>
+                             <span class="menu-title">Mail Ayarları</span>
+                         </a>
+                     </li>
+
+                    <li class="nav-item menu-items @(currentController == "adminlog" ? "active" : "")">
+                        <a class="nav-link" href="/AdminLog">
+                            <span class="menu-icon"><i class="mdi mdi-bug"></i></span>
+                            <span class="menu-title">Hata Logları</span>
+                        </a>
+                    </li>
+                }
+
+                <!-- Herkes görür -->
+                <li class="nav-item menu-items">
+                    <a class="nav-link" href="/" target="_blank">
+                        <span class="menu-icon"><i class="mdi mdi-open-in-new"></i></span>
+                        <span class="menu-title">Siteye Git</span>
+                    </a>
+                </li>
+                <li class="nav-item menu-items">
+                    <a class="nav-link" href="/AdminLogin/Logout">
+                        <span class="menu-icon"><i class="mdi mdi-logout"></i></span>
+                        <span class="menu-title">Çıkış Yap</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <div class="container-fluid page-body-wrapper">
+
+            <!-- Topbar -->
+            <nav class="navbar p-0 fixed-top d-flex flex-row">
+                <div class="navbar-brand-wrapper d-flex d-lg-none align-items-center justify-content-center">
+                    <a class="navbar-brand brand-logo-mini" href="/AdminHome">
+                        <img src="~/adminThema/assets/images/logo-mini.svg" alt="logo" />
+                    </a>
+                </div>
+                <div class="navbar-menu-wrapper flex-grow d-flex align-items-stretch">
+                    <button class="navbar-toggler navbar-toggler align-self-center" type="button" data-toggle="minimize">
+                        <span class="mdi mdi-menu"></span>
+                    </button>
+                    <ul class="navbar-nav w-100">
+                        <li class="nav-item w-100">
+                            <span class="nav-link mt-2 font-weight-bold">@ViewData["Title"]</span>
+                        </li>
+                    </ul>
+                    <ul class="navbar-nav navbar-nav-right">
+
+                        <!-- Bildirim - Sadece Admin -->
+                        @if (isAdmin)
+                        {
+                            <li class="nav-item border-left">
+                                <a class="nav-link position-relative d-inline-flex align-items-center justify-content-center" href="/AdminContact" style="width: 35px; height: 35px;">
+                                    <i class="mdi mdi-email-outline" style="font-size: 20px;"></i>
+                                    @if (unreadCount > 0)
+                                    {
+                                        <span style="
+                    position: absolute;
+                    top: 2px;
+                    right: 2px;
+                    background-color: #dc3545;
+                    color: white;
+                    font-size: 9px;
+                    font-weight: bold;
+                    border-radius: 10px;
+                    min-width: 14px;
+                    height: 14px;
+                    padding: 0 3px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border: 1.5px solid #fff;
+                    line-height: 1;">
+                                            @(unreadCount > 9 ? "9+" : unreadCount.ToString())
+                                        </span>
+                                    }
+                                </a>
+                            </li>
+                        }
+
+                        <!-- Profil Dropdown -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link" href="#" data-toggle="dropdown">
+                                <div class="navbar-profile">
+                                    @if (!string.IsNullOrEmpty(ViewBag.AdminProfileImage as string))
+                                    {
+                                        <img src="@ViewBag.AdminProfileImage"
+                                             style="width:32px;height:32px;border-radius:50%;object-fit:cover;margin-right:8px;" />
+                                    }
+                                    else
+                                    {
+                                        <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#e84545,#c62a88);display:inline-flex;align-items:center;justify-content:center;color:#fff;margin-right:8px;">
+                                            <i class="mdi mdi-account"></i>
+                                        </div>
+                                    }
+                                    <p class="mb-0 d-none d-sm-block navbar-profile-name"
+                                       style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                                        @(ViewBag.AdminEmail ?? "Kullanıcı")
+                                    </p>
+                                    <i class="mdi mdi-menu-down d-none d-sm-block"></i>
+                                </div>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right navbar-dropdown">
+                                <h6 class="p-3 mb-0">@(isAdmin ? "Admin Panel" : "Kullanıcı Panel")</h6>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="/Profile">
+                                    <div class="preview-thumbnail">
+                                        <div class="preview-icon bg-dark rounded-circle">
+                                            <i class="mdi mdi-account-circle text-primary"></i>
+                                        </div>
+                                    </div>
+                                    <div class="preview-item-content">
+                                        <p class="preview-subject mb-1">Profilim</p>
+                                    </div>
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="/AdminLogin/Logout">
+                                    <div class="preview-thumbnail">
+                                        <div class="preview-icon bg-dark rounded-circle">
+                                            <i class="mdi mdi-logout text-danger"></i>
+                                        </div>
+                                    </div>
+                                    <div class="preview-item-content">
+                                        <p class="preview-subject mb-1">Çıkış Yap</p>
+                                    </div>
+                                </a>
+                            </div>
+                        </li>
+                    </ul>
+
+                    <button class="navbar-toggler navbar-toggler-right d-lg-none align-self-center" type="button" data-toggle="offcanvas">
+                        <span class="mdi mdi-format-line-spacing"></span>
+                    </button>
+                </div>
+            </nav>
+
+            <div class="main-panel">
+                <div class="content-wrapper">
+                    @RenderBody()
+                </div>
+                <footer class="footer">
+                    <div class="d-sm-flex justify-content-center justify-content-sm-between">
+                        <span class="text-muted d-block text-center text-sm-left d-sm-inline-block">
+                            &copy; @DateTime.Now.Year @(ViewBag.SiteName ?? "NTT Hesap"). Tüm hakları saklıdır.
+                        </span>
+                    </div>
+                </footer>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="~/adminThema/assets/vendors/js/vendor.bundle.base.js"></script>
+    <script src="~/adminThema/assets/vendors/chart.js/Chart.min.js"></script>
+    <script src="~/adminThema/assets/vendors/owl-carousel-2/owl.carousel.min.js"></script>
+    <script src="~/adminThema/assets/js/off-canvas.js"></script>
+    <script src="~/adminThema/assets/js/hoverable-collapse.js"></script>
+    <script src="~/adminThema/assets/js/misc.js"></script>
+    <script src="~/adminThema/assets/js/settings.js"></script>
+    <script src="~/adminThema/assets/js/todolist.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

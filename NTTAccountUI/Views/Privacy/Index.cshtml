@@ -1,0 +1,211 @@
+﻿@{
+    ViewData["Title"] = "Gizlilik Politikası";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var siteName = ViewBag.SiteName ?? "NTT Hesap";
+    var siteUrl = ViewBag.SiteUrl ?? "https://ntthesap.com";
+    var email = ViewBag.Email ?? "info@ntthesap.com";
+}
+
+@section Styles {
+    <style>
+        .privacy_section {
+            padding: 80px 0;
+            background: #0d0d0d;
+            min-height: 70vh;
+        }
+
+        .privacy_title {
+            color: #fff;
+            font-size: 32px;
+            margin-bottom: 8px;
+            position: relative;
+            padding-bottom: 15px;
+        }
+
+            .privacy_title::after {
+                content: '';
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                width: 60px;
+                height: 3px;
+                background: linear-gradient(90deg, #e84545, #c62a88);
+            }
+
+        .privacy_subtitle {
+            color: #888;
+            font-size: 13px;
+            margin-bottom: 40px;
+        }
+
+        .privacy_card {
+            background: #111118;
+            border: 1px solid #1e1e30;
+            border-radius: 8px;
+            padding: 30px 32px;
+            margin-bottom: 20px;
+        }
+
+            .privacy_card h3 {
+                color: #e84545;
+                font-size: 16px;
+                font-weight: 700;
+                margin-bottom: 14px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .privacy_card p,
+            .privacy_card li {
+                color: #aaa;
+                font-size: 14px;
+                line-height: 1.8;
+            }
+
+            .privacy_card ul {
+                padding-left: 20px;
+                margin: 0;
+            }
+
+                .privacy_card ul li {
+                    margin-bottom: 6px;
+                }
+
+        .privacy_badge {
+            display: inline-block;
+            background: rgba(232,69,69,0.15);
+            border: 1px solid rgba(232,69,69,0.3);
+            color: #e84545;
+            font-size: 11px;
+            padding: 2px 10px;
+            border-radius: 20px;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+    </style>
+}
+
+<section class="breadcrumb breadcrumb_bg"
+         style="background-image: url('/img/privacy.png'); background-size: cover; background-position: center; padding: 60px 0;">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="breadcrumb_iner text-center">
+                    <div class="breadcrumb_iner_item">
+                        <h2>Gizlilik Politikası</h2>
+                        <p>Ana Sayfa &nbsp;/&nbsp; Gizlilik Politikası</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="privacy_section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-9">
+
+                <h2 class="privacy_title">Gizlilik Politikası</h2>
+                <p class="privacy_subtitle">
+                    Son güncelleme: @DateTime.Now.ToString("dd MMMM yyyy", new System.Globalization.CultureInfo("tr-TR"))
+                    &nbsp;·&nbsp; <a href="@siteUrl" style="color:#e84545;">@siteName</a>
+                </p>
+
+                <div class="privacy_card">
+                    <h3><i class="fas fa-info-circle"></i> 1. Genel Bilgilendirme</h3>
+                    <p>
+                        Bu gizlilik politikası, <strong style="color:#fff;">@siteName</strong> (<a href="@siteUrl" style="color:#e84545;">@siteUrl</a>)
+                        tarafından işletilen web sitesinin kişisel verileri nasıl topladığını,
+                        kullandığını ve koruduğunu açıklamaktadır. Sitemizi kullanarak bu politikayı
+                        kabul etmiş sayılırsınız.
+                    </p>
+                </div>
+
+                <div class="privacy_card">
+                    <h3><i class="fas fa-cookie-bite"></i> 2. Çerez Kullanımı <span class="privacy_badge">Çerez</span></h3>
+                    <p>Sitemiz aşağıdaki amaçlarla çerez kullanmaktadır:</p>
+                    <ul>
+                        <li><strong style="color:#ccc;">Zorunlu Çerezler:</strong> Oturum yönetimi, güvenlik ve temel site işlevleri için kullanılır. Bu çerezler devre dışı bırakılamaz.</li>
+                        <li><strong style="color:#ccc;">Tercih Çerezleri:</strong> Dil, tema gibi kullanıcı tercihlerini hatırlamak için kullanılır.</li>
+                        <li><strong style="color:#ccc;">Analitik Çerezler:</strong> Site kullanımını analiz etmek ve iyileştirmek için kullanılabilir.</li>
+                    </ul>
+                    <p style="margin-top:12px;">
+                        Çerezleri tarayıcı ayarlarınızdan yönetebilir veya silebilirsiniz.
+                        Çerezleri reddetmeniz halinde bazı site özellikleri düzgün çalışmayabilir.
+                    </p>
+                </div>
+
+                <div class="privacy_card">
+                    <h3><i class="fas fa-database"></i> 3. Toplanan Veriler</h3>
+                    <p>Sitemiz aşağıdaki kişisel verileri toplayabilir:</p>
+                    <ul>
+                        <li>Ad, soyad ve iletişim bilgileri (iletişim formu aracılığıyla)</li>
+                        <li>Telefon numarası</li>
+                        <li>E-posta adresi</li>
+                        <li>IP adresi ve tarayıcı bilgileri (güvenlik ve log amaçlı)</li>
+                        <li>Oturum bilgileri (giriş yapan kullanıcılar için)</li>
+                    </ul>
+                </div>
+
+                <div class="privacy_card">
+                    <h3><i class="fas fa-shield-alt"></i> 4. Verilerin Kullanımı</h3>
+                    <p>Toplanan veriler yalnızca şu amaçlarla kullanılmaktadır:</p>
+                    <ul>
+                        <li>Size daha iyi hizmet sunmak</li>
+                        <li>İletişim taleplerinize yanıt vermek</li>
+                        <li>Site güvenliğini sağlamak</li>
+                        <li>Yasal yükümlülükleri yerine getirmek</li>
+                    </ul>
+                    <p style="margin-top:12px;">
+                        Kişisel verileriniz, açık rızanız olmaksızın üçüncü şahıslarla paylaşılmaz.
+                    </p>
+                </div>
+
+                <div class="privacy_card">
+                    <h3><i class="fas fa-lock"></i> 5. Veri Güvenliği</h3>
+                    <p>
+                        Kişisel verilerinizin güvenliği için endüstri standardı güvenlik önlemleri uygulanmaktadır.
+                        Şifreler BCrypt ile hash'lenerek saklanır. Oturum bilgileri şifreli çerezlerle korunmaktadır.
+                        Bununla birlikte, internet üzerinden hiçbir veri iletiminin %100 güvenli olmadığını belirtmek isteriz.
+                    </p>
+                </div>
+
+                <div class="privacy_card">
+                    <h3><i class="fas fa-user-check"></i> 6. Haklarınız</h3>
+                    <p>KVKK kapsamında aşağıdaki haklara sahipsiniz:</p>
+                    <ul>
+                        <li>Kişisel verilerinizin işlenip işlenmediğini öğrenme</li>
+                        <li>Kişisel verileriniz işlenmişse buna ilişkin bilgi talep etme</li>
+                        <li>Kişisel verilerinizin işlenme amacını öğrenme</li>
+                        <li>Yurt içinde veya yurt dışında kişisel verilerinizin aktarıldığı üçüncü kişileri öğrenme</li>
+                        <li>Kişisel verilerinizin eksik veya yanlış işlenmiş olması hâlinde bunların düzeltilmesini isteme</li>
+                        <li>Kişisel verilerinizin silinmesini veya yok edilmesini isteme</li>
+                    </ul>
+                </div>
+
+                <div class="privacy_card">
+                    <h3><i class="fas fa-envelope"></i> 7. İletişim</h3>
+                    <p>
+                        Gizlilik politikamız hakkında sorularınız için bizimle iletişime geçebilirsiniz:
+                    </p>
+                    <p>
+                        <a href="mailto:@email" style="color:#e84545;">
+                            <i class="fas fa-envelope mr-2"></i>@email
+                        </a>
+                    </p>
+                </div>
+
+                <div class="privacy_card">
+                    <h3><i class="fas fa-edit"></i> 8. Politika Değişiklikleri</h3>
+                    <p>
+                        Bu gizlilik politikası zaman zaman güncellenebilir. Önemli değişiklikler yapıldığında
+                        site üzerinden bildirim yapılacaktır. Politikayı düzenli olarak incelemenizi öneririz.
+                    </p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>

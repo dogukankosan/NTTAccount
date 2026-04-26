@@ -1,0 +1,180 @@
+﻿@model NTTAccountUI.Models.ViewModels.AdminUserViewModel
+
+@{
+    var isEdit = Model.Id > 0;
+    ViewData["Title"] = isEdit ? "Kullanıcı Düzenle" : "Yeni Kullanıcı";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@if (!ViewData.ModelState.IsValid && ViewData.ModelState.ErrorCount > 0)
+{
+    <div class="alert alert-danger mb-4">
+        <i class="mdi mdi-alert-circle mr-2"></i>
+        @Html.ValidationSummary(false)
+    </div>
+}
+
+<form asp-action="@(isEdit ? "Edit" : "Create")" asp-controller="AdminUser"
+      method="post" enctype="multipart/form-data" id="userForm">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="ProfileImage" id="ProfileImageBase64" />
+
+    <div class="row">
+
+        <!-- Sol - Form -->
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h4 class="card-title">@(isEdit ? "Kullanıcı Bilgilerini Güncelle" : "Yeni Kullanıcı Ekle")</h4>
+
+                    <div class="form-group">
+                        <label style="color:#aaa;">Email <span class="text-danger">*</span></label>
+                        <input asp-for="Email" class="form-control" placeholder="ornek@ntthesap.com" autocomplete="off" />
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label style="color:#aaa;">
+                            Şifre
+                            @if (isEdit)
+                            {
+                                <span class="text-muted small">(boş bırakılırsa değişmez)</span>
+                            }
+                            else
+                            {
+                                <span class="text-danger">*</span>
+                            }
+                        </label>
+                        <div style="position:relative;">
+                            <input asp-for="Password" type="password" class="form-control"
+                                   placeholder="@(isEdit ? "Değiştirmek için girin" : "Şifre *")"
+                                   id="passwordInput" autocomplete="new-password"
+                                   style="padding-left:40px;" />
+                            <span id="togglePwd" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:#666;z-index:10;">
+                                <i class="mdi mdi-eye" id="eyeIcon"></i>
+                            </span>
+                        </div>
+                        <span asp-validation-for="Password" class="text-danger small"></span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label style="color:#aaa;">Rol <span class="text-danger">*</span></label>
+                                <select asp-for="RoleId" class="form-control">
+                                    <option value="2" selected="@(Model.RoleId == 2)">User</option>
+                                    <option value="1" selected="@(Model.RoleId == 1)">Admin</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label style="color:#aaa;">Durum</label>
+                                <div class="mt-2">
+                                    <div class="form-check">
+                                        <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                                        <label class="form-check-label" style="color:#ccc;">Aktif</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label style="color:#aaa;">Not <span class="text-muted small">(opsiyonel)</span></label>
+                        <textarea asp-for="Note" class="form-control" rows="3" placeholder="Kullanıcı hakkında not..."></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sağ - Profil Fotoğrafı -->
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-body text-center">
+                    <h4 class="card-title">Profil Fotoğrafı <span class="text-muted small">(opsiyonel)</span></h4>
+
+                    @if (!string.IsNullOrEmpty(Model.ProfileImage))
+                    {
+                        <img src="@Model.ProfileImage" id="profilePreview"
+                             style="width:100px;height:100px;border-radius:50%;object-fit:cover;margin-bottom:12px;display:block;margin-left:auto;margin-right:auto;border:3px solid #e84545;" />
+                    }
+                    else
+                    {
+                        <div id="profilePreview"
+                             style="width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,#e84545,#c62a88);display:flex;align-items:center;justify-content:center;margin-bottom:12px;margin-left:auto;margin-right:auto;">
+                            <i class="mdi mdi-account" style="font-size:44px;color:#fff;"></i>
+                        </div>
+                    }
+
+                    <input type="file" id="profileImageInput" accept="image/*" class="form-control-file" />
+                    <small class="text-muted d-block mt-1">PNG, JPG — Maks. 2MB</small>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <button type="submit" id="saveBtn" class="btn btn-primary btn-block">
+                        <i class="mdi mdi-content-save mr-1"></i> @(isEdit ? "Güncelle" : "Kaydet")
+                    </button>
+                    <a href="/AdminUser" class="btn btn-outline-secondary btn-block mt-2">
+                        <i class="mdi mdi-arrow-left mr-1"></i> Geri Dön
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</form>
+
+@section Scripts {
+    <script>
+        // Şifre göster/gizle
+        document.getElementById('togglePwd').addEventListener('click', function () {
+            var input = document.getElementById('passwordInput');
+            var icon  = document.getElementById('eyeIcon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.replace('mdi-eye', 'mdi-eye-off');
+            } else {
+                input.type = 'password';
+                icon.classList.replace('mdi-eye-off', 'mdi-eye');
+            }
+        });
+
+        // Profil fotoğrafı önizleme
+        document.getElementById('profileImageInput').addEventListener('change', function () {
+            var file = this.files[0];
+            if (!file) return;
+            if (file.size > 2 * 1024 * 1024) {
+                alert('Dosya boyutu 2MB\'dan büyük olamaz.');
+                this.value = '';
+                return;
+            }
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                var base64   = e.target.result;
+                var preview  = document.getElementById('profilePreview');
+                if (preview.tagName === 'IMG') {
+                    preview.src = base64;
+                } else {
+                    var img = document.createElement('img');
+                    img.id = 'profilePreview';
+                    img.src = base64;
+                    img.style.cssText = 'width:100px;height:100px;border-radius:50%;object-fit:cover;margin-bottom:12px;display:block;margin-left:auto;margin-right:auto;border:3px solid #e84545;';
+                    preview.parentNode.replaceChild(img, preview);
+                }
+                document.getElementById('ProfileImageBase64').value = base64;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // Submit
+        document.getElementById('userForm').addEventListener('submit', function () {
+            var btn = document.getElementById('saveBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="mdi mdi-loading mdi-spin mr-1"></i> Kaydediliyor...';
+        });
+    </script>
+}
