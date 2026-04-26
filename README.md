@@ -1,3 +1,5 @@
+
+
 # 🗡️ NTTAccountUI
 
 ![License](https://img.shields.io/github/license/dogukankosan/NTTAccountUI)
@@ -8,6 +10,7 @@
 > **NTTAccountUI**, Knight Online private server hesap yönetimi için geliştirilmiş, ASP.NET Core MVC tabanlı tam kapsamlı bir web uygulamasıdır. Kullanıcı tarafında modern bir vitrin sunarken, arka planda güçlü bir admin paneli ile site yönetimini tek çatı altında toplar.
 
 ---
+<img width="1649" height="907" alt="1" src="https://github.com/user-attachments/assets/02c912a8-220c-4246-89bf-716659a0e276" />
 
 ## 🚀 Özellikler
 
