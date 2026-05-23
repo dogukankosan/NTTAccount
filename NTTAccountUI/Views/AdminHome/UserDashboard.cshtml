@@ -3,33 +3,41 @@
     ViewData["Title"] = "Dashboard";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
     var user = ViewBag.CurrentUser as NTTAccountUI.Models.Entities.User;
+    var recentOrders = ViewBag.UserRecentOrders as
+        IEnumerable<NTTAccountUI.Models.Entities.Order>;
 }
 
 <div class="row justify-content-center">
-    <div class="col-lg-8">
+    <div class="col-lg-10">
 
         <!-- Hoş Geldin Kartı -->
-        <div class="card mb-4" style="background:linear-gradient(135deg,#1a1a2e,#16213e);border:1px solid #2a2a4a;">
-            <div class="card-body text-center py-5">
+        <div class="card mb-4"
+             style="background:linear-gradient(135deg,#1a1a2e,#16213e);
+                    border:1px solid #2a2a4a;">
+            <div class="card-body text-center py-4">
                 @if (!string.IsNullOrEmpty(user?.ProfileImage))
                 {
                     <img src="@user.ProfileImage"
-                         style="width:90px;height:90px;border-radius:50%;object-fit:cover;border:3px solid #e84545;margin-bottom:16px;" />
+                         style="width:80px;height:80px;border-radius:50%;object-fit:cover;
+                                    border:3px solid #e84545;margin-bottom:12px;" />
                 }
                 else
                 {
-                    <div style="width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,#e84545,#c62a88);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
-                        <i class="mdi mdi-account" style="font-size:42px;color:#fff;"></i>
+                    <div style="width:80px;height:80px;border-radius:50%;
+                                    background:linear-gradient(135deg,#e84545,#c62a88);
+                                    display:flex;align-items:center;justify-content:center;
+                                    margin:0 auto 12px;">
+                        <i class="mdi mdi-account" style="font-size:38px;color:#fff;"></i>
                     </div>
                 }
-
-                <h4 style="color:#fff;margin-bottom:6px;">Hoş Geldiniz!</h4>
-                <p style="color:#e84545;font-size:14px;margin-bottom:4px;">@(user?.Email ?? ViewBag.AdminEmail ?? "")</p>
+                <h5 style="color:#fff;margin-bottom:4px;">Hoş Geldiniz!</h5>
+                <p style="color:#e84545;font-size:13px;margin-bottom:4px;">
+                    @(user?.Email ?? ViewBag.AdminEmail ?? "")
+                </p>
                 <span class="badge badge-info">Kullanıcı</span>
-
                 @if (user?.LastLoginAt.HasValue == true)
                 {
-                    <p class="text-muted small mt-3 mb-0">
+                    <p class="text-muted small mt-2 mb-0">
                         <i class="mdi mdi-clock-outline mr-1"></i>
                         Son giriş: @user.LastLoginAt.Value.ToTurkeyTimeString("dd.MM.yyyy HH:mm")
                     </p>
@@ -37,66 +45,191 @@
             </div>
         </div>
 
-        <!-- Bilgi Kartları -->
+        <!-- Sipariş İstatistik Kartları -->
         <div class="row mb-4">
-            <div class="col-sm-6 mb-3">
-                <div class="card text-center" style="border:1px solid #2a2a4a;">
-                    <div class="card-body py-4">
-                        <i class="mdi mdi-account-circle" style="font-size:32px;color:#e84545;display:block;margin-bottom:8px;"></i>
-                        <h6 style="color:#fff;margin-bottom:4px;">Profilim</h6>
-                        <p class="text-muted small mb-3">Bilgilerinizi güncelleyin</p>
-                        <a href="/Profile" class="btn btn-sm btn-outline-primary">Düzenle</a>
+            <div class="col-sm-4 mb-3">
+                <div class="card text-center"
+                     style="border-left:4px solid #e84545;">
+                    <div class="card-body py-3">
+                        <i class="mdi mdi-clipboard-list"
+                           style="font-size:28px;color:#e84545;display:block;margin-bottom:6px;"></i>
+                        <h3 style="color:#fff;margin:0;">@(ViewBag.UserTotalOrders ?? 0)</h3>
+                        <p class="text-muted small mb-0">Toplam Sipariş</p>
                     </div>
                 </div>
             </div>
-            <div class="col-sm-6 mb-3">
-                <div class="card text-center" style="border:1px solid #2a2a4a;">
-                    <div class="card-body py-4">
-                        <i class="mdi mdi-email-outline" style="font-size:32px;color:#e84545;display:block;margin-bottom:8px;"></i>
-                        <h6 style="color:#fff;margin-bottom:4px;">İletişim</h6>
-                        <p class="text-muted small mb-3">Destek için bize ulaşın</p>
-                        <a href="/Contact" target="_blank" class="btn btn-sm btn-outline-primary">Ulaş</a>
+            <div class="col-sm-4 mb-3">
+                <div class="card text-center"
+                     style="border-left:4px solid #ffc107;">
+                    <div class="card-body py-3">
+                        <i class="mdi mdi-clock-outline"
+                           style="font-size:28px;color:#ffc107;display:block;margin-bottom:6px;"></i>
+                        <h3 style="color:#fff;margin:0;">@(ViewBag.UserPendingOrders ?? 0)</h3>
+                        <p class="text-muted small mb-0">Bekliyor</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-4 mb-3">
+                <div class="card text-center"
+                     style="border-left:4px solid #28a745;">
+                    <div class="card-body py-3">
+                        <i class="mdi mdi-check-all"
+                           style="font-size:28px;color:#28a745;display:block;margin-bottom:6px;"></i>
+                        <h3 style="color:#fff;margin:0;">@(ViewBag.UserClosedOrders ?? 0)</h3>
+                        <p class="text-muted small mb-0">Teslim Edildi</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Hesap Bilgileri -->
-        <div class="card">
-            <div class="card-body">
-                <h5 style="color:#fff;margin-bottom:20px;">Hesap Bilgileri</h5>
+        <div class="row">
 
-                <div style="padding:12px 0;border-bottom:1px solid #1e1e30;display:flex;justify-content:space-between;">
-                    <span class="text-muted small">Email</span>
-                    <span style="color:#fff;font-size:13px;">@(user?.Email ?? "-")</span>
-                </div>
-                <div style="padding:12px 0;border-bottom:1px solid #1e1e30;display:flex;justify-content:space-between;">
-                    <span class="text-muted small">Rol</span>
-                    <span class="badge badge-info">Kullanıcı</span>
-                </div>
-                <div style="padding:12px 0;border-bottom:1px solid #1e1e30;display:flex;justify-content:space-between;">
-                    <span class="text-muted small">Durum</span>
-                    <span class="badge badge-success">Aktif</span>
-                </div>
-                <div style="padding:12px 0;border-bottom:1px solid #1e1e30;display:flex;justify-content:space-between;">
-                    <span class="text-muted small">Kayıt Tarihi</span>
-                    <span style="color:#fff;font-size:13px;">@(user?.CreatedAt.ToTurkeyTimeString("dd.MM.yyyy") ?? "-")</span>
-                </div>
-                @if (!string.IsNullOrEmpty(user?.Note))
-                {
-                    <div style="padding:12px 0;display:flex;justify-content:space-between;">
-                        <span class="text-muted small">Not</span>
-                        <span style="color:#fff;font-size:13px;">@user.Note</span>
+            <!-- Son Siparişler -->
+            <div class="col-lg-7 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 style="color:#fff;margin:0;">
+                                <i class="mdi mdi-clipboard-list mr-2"
+                                   style="color:#e84545;"></i>
+                                Son Siparişlerim
+                            </h5>
+                            <a href="/Order" class="btn btn-sm btn-outline-primary">Tümü</a>
+                        </div>
+
+                        @if (recentOrders == null || !recentOrders.Any())
+                        {
+                            <p class="text-muted text-center py-3">Henüz sipariş yok.</p>
+                        }
+                        else
+                        {
+                            @foreach (var order in recentOrders)
+                            {
+                                var sc = order.Status == 0 ? "warning"
+                                : order.Status == 1 ? "info" : "success";
+                                var st = order.Status == 0 ? "Bekliyor"
+                                : order.Status == 1 ? "Kısmı Sevk" : "Kapandı";
+                                <div style="padding:12px 0;border-bottom:1px solid #1e1e2e;">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <span style="color:#e84545;font-weight:700;
+                                                                 font-size:13px;">
+                                                @order.OrderNo
+                                            </span>
+                                            <span class="badge badge-@sc ml-2">@st</span>
+                                            <br>
+                                            <small class="text-muted">
+                                                <i class="mdi mdi-package-variant mr-1"></i>
+                                                @order.Items.Count satır
+                                                &nbsp;|&nbsp;
+                                                <i class="mdi mdi-calendar mr-1"></i>
+                                                @order.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")
+                                            </small>
+                                        </div>
+                                        <a href="/Order"
+                                           class="btn btn-sm btn-outline-secondary">
+                                            <i class="mdi mdi-eye"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            }
+                        }
                     </div>
-                }
-
-                <div class="mt-4">
-                    <a href="/Profile" class="btn btn-primary btn-block">
-                        <i class="mdi mdi-account-edit mr-1"></i> Profili Düzenle
-                    </a>
                 </div>
             </div>
-        </div>
 
+            <!-- Sağ Panel -->
+            <div class="col-lg-5 mb-4">
+
+                <!-- Hızlı Erişim -->
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h5 style="color:#fff;margin-bottom:16px;">Hızlı Erişim</h5>
+                        <div class="row">
+                            <div class="col-6 mb-2">
+                                <a href="/Order"
+                                   class="btn btn-block"
+                                   style="background:#1a1a2e;border:1px solid #2a2a4a;
+                                          color:#fff;font-size:12px;padding:10px;">
+                                    <i class="mdi mdi-clipboard-list d-block mb-1"
+                                       style="font-size:20px;color:#e84545;"></i>
+                                    Siparişlerim
+                                </a>
+                            </div>
+                            <div class="col-6 mb-2">
+                                <a href="/Profile"
+                                   class="btn btn-block"
+                                   style="background:#1a1a2e;border:1px solid #2a2a4a;
+                                          color:#fff;font-size:12px;padding:10px;">
+                                    <i class="mdi mdi-account-edit d-block mb-1"
+                                       style="font-size:20px;color:#e84545;"></i>
+                                    Profilim
+                                </a>
+                            </div>
+                            <div class="col-6 mb-2">
+                                <a href="/Contact" target="_blank"
+                                   class="btn btn-block"
+                                   style="background:#1a1a2e;border:1px solid #2a2a4a;
+                                          color:#fff;font-size:12px;padding:10px;">
+                                    <i class="mdi mdi-email-outline d-block mb-1"
+                                       style="font-size:20px;color:#e84545;"></i>
+                                    İletişim
+                                </a>
+                            </div>
+                            <div class="col-6 mb-2">
+                                <a href="/#products"
+                                   class="btn btn-block"
+                                   style="background:#1a1a2e;border:1px solid #2a2a4a;
+                                          color:#fff;font-size:12px;padding:10px;">
+                                    <i class="mdi mdi-package-variant d-block mb-1"
+                                       style="font-size:20px;color:#e84545;"></i>
+                                    Ürünler
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hesap Bilgileri -->
+                <div class="card">
+                    <div class="card-body">
+                        <h5 style="color:#fff;margin-bottom:16px;">Hesap Bilgileri</h5>
+                        <div style="padding:10px 0;border-bottom:1px solid #1e1e30;
+                                    display:flex;justify-content:space-between;">
+                            <span class="text-muted small">Email</span>
+                            <span style="color:#fff;font-size:13px;word-break:break-all;">
+                                @(user?.Email ?? "-")
+                            </span>
+                        </div>
+                        <div style="padding:10px 0;border-bottom:1px solid #1e1e30;
+                                    display:flex;justify-content:space-between;">
+                            <span class="text-muted small">Durum</span>
+                            <span class="badge badge-success">Aktif</span>
+                        </div>
+                        <div style="padding:10px 0;border-bottom:1px solid #1e1e30;
+                                    display:flex;justify-content:space-between;">
+                            <span class="text-muted small">Kayıt</span>
+                            <span style="color:#fff;font-size:13px;">
+                                @(user?.CreatedAt.ToTurkeyTimeString("dd.MM.yyyy") ?? "-")
+                            </span>
+                        </div>
+                        @if (!string.IsNullOrEmpty(user?.Note))
+                        {
+                            <div style="padding:10px 0;display:flex;
+                                            justify-content:space-between;">
+                                <span class="text-muted small">Not</span>
+                                <span style="color:#fff;font-size:13px;">@user.Note</span>
+                            </div>
+                        }
+                        <div class="mt-3">
+                            <a href="/Profile" class="btn btn-primary btn-block btn-sm">
+                                <i class="mdi mdi-account-edit mr-1"></i> Profili Düzenle
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
     </div>
 </div>

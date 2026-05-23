@@ -350,3 +350,6 @@ wwwroot\UserThema\webfonts\fa-solid-900.svg
 wwwroot\UserThema\webfonts\fa-solid-900.ttf
 wwwroot\UserThema\webfonts\fa-solid-900.woff
 wwwroot\UserThema\webfonts\fa-solid-900.woff2
+wwwroot\img\about.png
+wwwroot\js\adminOrderCreate.js
+wwwroot\js\adminOrderEdit.js

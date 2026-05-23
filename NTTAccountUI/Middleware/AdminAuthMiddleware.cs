@@ -13,14 +13,17 @@ public class AdminAuthMiddleware
         "/adminuser",
         "/admincontact",
         "/adminlog",
+        "/adminreport",
         "/adminsitesettings",
         "/adminbannerslide",
-        "/adminmailsettings"
+        "/adminmailsettings"  ,"/adminorder"  , // ✅ ekle
+        "/adminproduct"   // ✅ bunu ekle
     ];
     // YENİ:
     private static readonly string[] AuthPaths =
     [
-        "/adminhome",
+        "/adminhome",  
+        "/order"    ,  // ✅ ekle
     "/profile"
     ];
     // Kontrol dışı

@@ -1,0 +1,136 @@
+﻿@model IEnumerable<NTTAccountUI.Models.Entities.Product>
+
+@{
+    ViewData["Title"] = "Ürün Yönetimi";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show mb-4">
+        <i class="mdi mdi-check-circle mr-2"></i> @TempData["Success"]
+        <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show mb-4">
+        <i class="mdi mdi-alert-circle mr-2"></i> @TempData["Error"]
+        <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+    </div>
+}
+
+<div class="card">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="card-title mb-0">Ürün Listesi</h4>
+            <a href="@Url.Action("Create", "AdminProduct")" class="btn btn-primary btn-sm">
+                <i class="mdi mdi-plus mr-1"></i> Yeni Ürün
+            </a>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover" id="productTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Kod</th>
+                        <th>Ürün Adı</th>
+                        <th>Fiyat</th>
+                        <th>Stok</th>
+                        <th>Durum</th>
+                        <th>Ekleyen</th>
+                        <th>Tarih</th>
+                        <th>İşlem</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@item.Id</td>
+                            <td><span class="badge badge-warning">@item.Code</span></td>
+                            <td>@item.Name</td>
+                            <td>@item.Price.ToString("N2") ₺</td>
+                            <td>
+                                @if (item.Stock <= 5)
+                                {
+                                    <span class="text-danger font-weight-bold">@item.Stock</span>
+                                }
+                                else
+                                {
+                                    <span>@item.Stock</span>
+                                }
+                            </td>
+                            <td>
+                                @if (item.IsActive)
+                                {
+                                    <span class="badge badge-success">Aktif</span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-danger">Pasif</span>
+                                }
+                            </td>
+                            <td>
+                                <small class="text-muted">@item.CreatedByEmail</small>
+                            </td>
+                            <td>
+                                <small class="text-muted">@item.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</small>
+                            </td>
+                            <td>
+                                <a href="@Url.Action("Edit", "AdminProduct", new { id = item.Id })"
+                                   class="btn btn-warning btn-sm">
+                                    <i class="mdi mdi-pencil"></i>
+                                </a>
+                                <button type="button" class="btn btn-danger btn-sm"
+                                        onclick="confirmDelete(@item.Id, '@item.Name')">
+                                    <i class="mdi mdi-delete"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="9" class="text-center text-muted py-4">
+                                <i class="mdi mdi-package-variant mdi-48px d-block mb-2"></i>
+                                Henüz ürün eklenmemiş.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Silme formu -->
+<form id="deleteForm" asp-action="Delete" asp-controller="AdminProduct" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="id" id="deleteId" />
+</form>
+
+@section Scripts {
+    <script>
+        function confirmDelete(id, name) {
+            Swal.fire({
+                title: 'Ürünü Sil',
+                html: '<b>' + name + '</b> ürününü silmek istediğinize emin misiniz?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Evet, Sil',
+                cancelButtonText: 'İptal',
+                confirmButtonColor: '#e84545',
+                cancelButtonColor: '#444',
+                background: '#1a1a2e',
+                color: '#fff'
+            }).then(function (result) {
+                if (result.isConfirmed) {
+                    document.getElementById('deleteId').value = id;
+                    document.getElementById('deleteForm').submit();
+                }
+            });
+        }
+    </script>
+}

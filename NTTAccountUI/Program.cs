@@ -1,3 +1,4 @@
+using NTTAccountUI.Controllers;
 using NTTAccountUI.Data;
 using NTTAccountUI.Data.Repositories;
 using NTTAccountUI.Middleware;
@@ -18,6 +19,9 @@ builder.Services.AddScoped<IBannerSlideRepository, BannerSlideRepository>();
 builder.Services.AddScoped<IErrorLogRepository, ErrorLogRepository>();
 builder.Services.AddScoped<IMailSettingsRepository, MailSettingsRepository>();
 builder.Services.AddScoped<IMailService, MailService>();
+builder.Services.AddScoped<IProductRepository, ProductRepository>(); 
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<OrderController>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<IEncryptionService, EncryptionService>();
 builder.Services.AddSession(opt =>
@@ -27,6 +31,9 @@ builder.Services.AddSession(opt =>
     opt.Cookie.IsEssential = true;
     opt.Cookie.SecurePolicy = CookieSecurePolicy.Always;
 });
+var cultureInfo = new System.Globalization.CultureInfo("en-US");
+System.Globalization.CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
+System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
 WebApplication app = builder.Build();
 if (app.Environment.IsDevelopment())
 {

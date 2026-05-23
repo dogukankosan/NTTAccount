@@ -109,7 +109,17 @@
                         <span class="menu-title">Profilim</span>
                     </a>
                 </li>
-
+                @* Sadece user rolü görsün (RoleId != 1 yani admin değil) *@
+                @if (!isAdmin)
+                {
+                    <li class="nav-item menu-items @(currentController == "order" ? "active" : "")">
+                        <a class="nav-link" href="/Order">
+                            <span class="menu-icon"><i class="mdi mdi-clipboard-list"></i></span>
+                            <span class="menu-title">Siparişlerim</span>
+                        </a>
+                    </li>
+                }
+             
                 <!-- Yönetim - Sadece Admin -->
                 @if (isAdmin)
                 {
@@ -120,6 +130,20 @@
                             <span class="menu-title">Kullanıcılar</span>
                         </a>
                     </li>
+                    <li class="nav-item menu-items @(currentController == "adminproduct" ? "active" : "")">
+                        <a class="nav-link" href="/AdminProduct">
+                            <span class="menu-icon"><i class="mdi mdi-package-variant"></i></span>
+                            <span class="menu-title">Ürün Yönetimi</span>
+                        </a>
+                    </li>
+                    @* Sadece admin için *@
+                    <li class="nav-item menu-items @(currentController == "adminorder" ? "active" : "")">
+                        <a class="nav-link" href="/AdminOrder">
+                            <span class="menu-icon"><i class="mdi mdi-clipboard-check"></i></span>
+                            <span class="menu-title">Sipariş Yönetimi</span>
+                        </a>
+                    </li>
+
                     <li class="nav-item menu-items @(currentController == "admincontact" ? "active" : "")">
                         <a class="nav-link" href="/AdminContact">
                             <span class="menu-icon"><i class="mdi mdi-email"></i></span>
@@ -132,6 +156,7 @@
                             </span>
                         </a>
                     </li>
+                  
                     <li class="nav-item menu-items @(currentController == "adminsitesettings" ? "active" : "")">
                         <a class="nav-link" href="/AdminSiteSettings">
                             <span class="menu-icon"><i class="mdi mdi-settings"></i></span>
@@ -152,7 +177,12 @@
                              <span class="menu-title">Mail Ayarları</span>
                          </a>
                      </li>
-
+                    <li class="nav-item menu-items @(currentController == "adminreport" ? "active" : "")">
+                        <a class="nav-link" href="/AdminReport">
+                            <span class="menu-icon"><i class="mdi mdi-chart-bar"></i></span>
+                            <span class="menu-title">Raporlama</span>
+                        </a>
+                    </li>
                     <li class="nav-item menu-items @(currentController == "adminlog" ? "active" : "")">
                         <a class="nav-link" href="/AdminLog">
                             <span class="menu-icon"><i class="mdi mdi-bug"></i></span>

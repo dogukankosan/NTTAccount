@@ -22,6 +22,7 @@ C:\Users\DOGUKAN\source\repos\NTTAccountProject\NTTAccountUI\obj\Release\net8.0\
 C:\Users\DOGUKAN\source\repos\NTTAccountProject\NTTAccountUI\obj\Release\net8.0\PubTmp\Out\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
 C:\Users\DOGUKAN\source\repos\NTTAccountProject\NTTAccountUI\obj\Release\net8.0\PubTmp\Out\Microsoft.IdentityModel.Tokens.dll
 C:\Users\DOGUKAN\source\repos\NTTAccountProject\NTTAccountUI\obj\Release\net8.0\PubTmp\Out\Microsoft.SqlServer.Server.dll
+C:\Users\DOGUKAN\source\repos\NTTAccountProject\NTTAccountUI\obj\Release\net8.0\PubTmp\Out\Newtonsoft.Json.dll
 C:\Users\DOGUKAN\source\repos\NTTAccountProject\NTTAccountUI\obj\Release\net8.0\PubTmp\Out\SixLabors.ImageSharp.dll
 C:\Users\DOGUKAN\source\repos\NTTAccountProject\NTTAccountUI\obj\Release\net8.0\PubTmp\Out\System.Configuration.ConfigurationManager.dll
 C:\Users\DOGUKAN\source\repos\NTTAccountProject\NTTAccountUI\obj\Release\net8.0\PubTmp\Out\System.Diagnostics.EventLog.dll

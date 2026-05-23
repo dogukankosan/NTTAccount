@@ -1,0 +1,386 @@
+﻿@model NTTAccountUI.Models.ViewModels.OrderViewModel
+
+@{
+    ViewData["Title"] = "Yeni Sipariş";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var products = ViewBag.Products as IEnumerable<NTTAccountUI.Models.Entities.Product>
+                   ?? Enumerable.Empty<NTTAccountUI.Models.Entities.Product>();
+    var users = ViewBag.Users as IEnumerable<NTTAccountUI.Models.Entities.User>
+                ?? Enumerable.Empty<NTTAccountUI.Models.Entities.User>();
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show mb-4">
+        <i class="mdi mdi-alert-circle mr-2"></i> @TempData["Error"]
+        <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+    </div>
+}
+
+<div class="card">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="card-title mb-0">Yeni Sipariş Oluştur</h4>
+            <div>
+                <button type="button" class="btn btn-outline-danger btn-sm mr-2"
+                        onclick="clearDraft()">
+                    <i class="mdi mdi-delete-sweep mr-1"></i> Taslağı Temizle
+                </button>
+                <a href="@Url.Action("Index", "AdminOrder")" class="btn btn-secondary btn-sm">
+                    <i class="mdi mdi-arrow-left mr-1"></i> Geri
+                </a>
+            </div>
+        </div>
+
+        <div id="draftBanner" class="alert alert-info mb-4" style="display:none;">
+            <i class="mdi mdi-content-save mr-1"></i>
+            <strong>Kaydedilmemiş taslak bulundu.</strong>
+            Satırlarınız otomatik olarak geri yüklendi.
+        </div>
+
+        <form asp-action="Create" asp-controller="AdminOrder" method="post"
+              enctype="multipart/form-data" id="orderForm">
+            @Html.AntiForgeryToken()
+
+            <!-- Sipariş Başlığı -->
+            <div class="card mb-4" style="background:#1a1a2e;border:1px solid #2a2a4a;">
+                <div class="card-body">
+                    <h5 class="card-title text-white mb-3">
+                        <i class="mdi mdi-clipboard-text mr-1"></i> Sipariş Bilgileri
+                    </h5>
+
+                    <!-- Kullanıcı Arama -->
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label">
+                            Kullanıcı <span class="text-danger">*</span>
+                        </label>
+                        <div class="col-sm-9">
+                            <div class="user-search-wrap" style="position:relative;">
+                                <div class="input-group" id="userSearchGroup">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text"
+                                              style="background:#111118;border-color:#2a2a4a;">
+                                            <i class="mdi mdi-account-search" style="color:#e84545;"></i>
+                                        </span>
+                                    </div>
+                                    <input type="text" id="userSearch" class="form-control"
+                                           placeholder="Email ile kullanıcı ara..."
+                                           autocomplete="off" />
+                                </div>
+                                <div id="selectedUserBadge" style="display:none;margin-top:8px;">
+                                    <span class="badge badge-success p-2" style="font-size:13px;">
+                                        <i class="mdi mdi-account-check mr-1"></i>
+                                        <span id="selectedUserEmail"></span>
+                                        <button type="button" onclick="clearUser()"
+                                                style="background:none;border:none;color:#fff;
+                                                       margin-left:8px;padding:0;cursor:pointer;"
+                                                title="Seçimi Temizle">
+                                            <i class="mdi mdi-close"></i>
+                                        </button>
+                                    </span>
+                                </div>
+                                <div id="userDropdown"
+                                     style="display:none;position:absolute;top:100%;left:0;right:0;
+                                            background:#111118;border:1px solid #2a2a4a;
+                                            border-radius:6px;max-height:220px;overflow-y:auto;
+                                            z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,0.5);
+                                            margin-top:2px;">
+                                    <div id="userDropdownList"></div>
+                                    <div id="userDropdownEmpty"
+                                         style="display:none;padding:14px;text-align:center;color:#555;">
+                                        <i class="mdi mdi-account-off mr-1"></i> Kullanıcı bulunamadı.
+                                    </div>
+                                </div>
+                            </div>
+                            <input type="hidden" name="UserId" id="f_UserId" />
+                            <small id="userSearchError" class="text-danger" style="display:none;">
+                                Lütfen listeden bir kullanıcı seçiniz.
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="form-group row mb-0">
+                        <label class="col-sm-3 col-form-label">Sipariş Notu</label>
+                        <div class="col-sm-9">
+                            <textarea name="Note" id="f_Note" class="form-control"
+                                      rows="2" placeholder="Opsiyonel not..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Satırlar -->
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="text-white mb-0">
+                    <i class="mdi mdi-format-list-bulleted mr-1"></i>
+                    Sipariş Satırları
+                    <span class="badge badge-primary ml-1" id="rowCount">0</span>
+                </h5>
+                <div>
+                    <!-- Excel Butonları -->
+                    <button type="button" class="btn btn-outline-info btn-sm mr-1"
+                            onclick="downloadTemplate()">
+                        <i class="mdi mdi-file-excel mr-1"></i> Şablon İndir
+                    </button>
+                    <label class="btn btn-outline-success btn-sm mr-1 mb-0" style="cursor:pointer;">
+                        <i class="mdi mdi-upload mr-1"></i> Excel Yükle
+                        <input type="file" id="excelFileInput" accept=".xlsx,.xls"
+                               style="display:none;" onchange="handleExcelUpload(this)" />
+                    </label>  <button type="button" class="btn btn-outline-warning btn-sm mr-1"
+            onclick="openZipModal()" id="zipModalBtn" style="display:none;">
+        <i class="mdi mdi-zip-box mr-1"></i> ZIP Yükle
+    </button>
+                    <button type="button" class="btn btn-success btn-sm"
+                            data-toggle="modal" data-target="#addItemModal">
+                        <i class="mdi mdi-plus mr-1"></i> Satır Ekle
+                    </button>
+                </div>
+            </div>
+
+            <!-- Excel Hata Tablosu -->
+            <div id="excelErrorPanel" class="mb-3" style="display:none;">
+                <div class="alert alert-danger">
+                    <strong><i class="mdi mdi-alert mr-1"></i> Excel Aktarım Hatası</strong>
+                    <p class="mb-2 mt-1">Aşağıdaki satırlarda hata bulunduğundan hiçbir satır aktarılmadı:</p>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered mb-0"
+                               style="background:#fff;color:#333;font-size:12px;">
+                            <thead style="background:#e84545;color:#fff;">
+                                <tr>
+                                    <th>Excel Satırı</th>
+                                    <th>Malzeme Kodu</th>
+                                    <th>Hata</th>
+                                </tr>
+                            </thead>
+                            <tbody id="excelErrorBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive mb-4">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Ürün</th>
+                            <th>Server</th>
+                            <th>Miktar</th>
+                            <th>Fiyat</th>
+                            <th>ZIP</th>
+                            <th>İşlem</th>
+                        </tr>
+                    </thead>
+                    <tbody id="itemsTableBody">
+                        <tr id="emptyRow">
+                            <td colspan="7" class="text-center text-muted py-3">
+                                <i class="mdi mdi-information-outline mr-1"></i>
+                                Henüz satır eklenmedi.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="hiddenInputs"></div>
+
+            <div class="mt-2">
+                <button type="submit" id="saveBtn" class="btn btn-primary">
+                    <i class="mdi mdi-content-save mr-1"></i> Siparişi Kaydet
+                </button>
+                <a href="@Url.Action("Index", "AdminOrder")"
+                   class="btn btn-secondary ml-2">İptal</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ── Satır Ekle Modal ── -->
+<div class="modal fade" id="addItemModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="background:#1a1a2e;border:1px solid #2a2a4a;">
+            <div class="modal-header" style="border-bottom:1px solid #2a2a4a;">
+                <h5 class="modal-title text-white">
+                    <i class="mdi mdi-plus-circle mr-1"></i> Sipariş Satırı Ekle
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="text-white">Ürün <span class="text-danger">*</span></label>
+                        <select id="m_ProductId" class="form-control" onchange="modalFillPrice()">
+                            <option value="">-- Ürün Seç --</option>
+                            @foreach (var p in products)
+                            {
+                                <option value="@p.Id"
+                                        data-price="@p.Price.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                        data-stock="@p.Stock"
+                                        data-name="@p.Name"
+                                        data-code="@p.Code">
+                                    @p.Name (@p.Code) — Stok: @p.Stock
+                                </option>
+                            }
+                        </select>
+                        <small id="stockInfo" class="text-muted"></small>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="text-white">Miktar <span class="text-danger">*</span></label>
+                        <input type="number" id="m_Quantity" class="form-control"
+                               min="1" value="1" onchange="modalCheckStock()" />
+                        <small id="stockWarning" class="text-danger" style="display:none;"></small>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="text-white">Birim Fiyat (₺)</label>
+                 <input type="text" id="m_UnitPrice" class="form-control"
+       placeholder="Ürün seçince gelir"
+       oninput="fixDecimal(this)" />
+                        <small class="text-muted">Değiştirebilirsiniz</small>
+                    </div>
+                </div>
+                <hr style="border-color:#2a2a4a;" />
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="text-white">Server Adı <span class="text-danger">*</span></label>
+                        <input type="text" id="m_ServerName" class="form-control"
+                               placeholder="Apex, Ares, Sirius..." />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-white">Karakter ID <span class="text-danger">*</span></label>
+                        <input type="text" id="m_CharacterId" class="form-control" />
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="text-white">Karakter Şifresi <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input type="password" id="m_CharacterPw" class="form-control" />
+                            <div class="input-group-append">
+                                <button type="button" class="btn btn-outline-secondary"
+                                        onclick="togglePw('m_CharacterPw', this)" tabindex="-1">
+                                    <i class="mdi mdi-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-white">Karakter Mail <span class="text-danger">*</span></label>
+                        <input type="text" id="m_CharacterMail" class="form-control"
+                               placeholder="ornek@mail.com" oninput="validateCharMail(this)" />
+                        <small id="charMailError" class="text-danger" style="display:none;"></small>
+                    </div>
+                </div>
+                <div class="row mb-3">
+            <div class="col-md-6">
+    <label class="text-white">Mail Şifresi <span class="text-danger">*</span></label>
+    <div class="input-group">
+        <input type="password" id="m_CharacterMailPw" class="form-control" />
+        <div class="input-group-append">
+            <button type="button" class="btn btn-outline-secondary"
+                    onclick="togglePw('m_CharacterMailPw', this)" tabindex="-1">
+                <i class="mdi mdi-eye"></i>
+            </button>
+        </div>
+    </div>
+</div>
+                    <div class="col-md-3">
+                        <label class="text-white">OTP Kodu <span class="text-danger">*</span></label>
+                        <input type="text" id="m_OtpCode" class="form-control" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="text-white">OTP Şifresi <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input type="password" id="m_OtpPassword" class="form-control" />
+                            <div class="input-group-append">
+                                <button type="button" class="btn btn-outline-secondary"
+                                        onclick="togglePw('m_OtpPassword', this)" tabindex="-1">
+                                    <i class="mdi mdi-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <label class="text-white">
+                            ZIP Dosyası <span class="text-danger">*</span>
+                        </label>
+                        <div class="custom-file">
+                            <input type="file" class="custom-file-input" id="m_ZipFile"
+                                   accept=".zip" onchange="handleZipSelect(this)" />
+                            <label class="custom-file-label text-muted" for="m_ZipFile">
+                                Dosya seç...
+                            </label>
+                        </div>
+                        <small class="text-muted">Sadece .zip — Max 10MB</small>
+                        <div id="zipProgress" class="mt-2" style="display:none;">
+                            <div class="progress" style="height:4px;">
+                                <div class="progress-bar bg-success progress-bar-striped
+                                            progress-bar-animated" style="width:100%"></div>
+                            </div>
+                            <small class="text-muted">Dosya işleniyor...</small>
+                        </div>
+                        <div id="zipPreview" class="mt-2"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="border-top:1px solid #2a2a4a;">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">İptal</button>
+                <button type="button" class="btn btn-success" onclick="addItemFromModal()">
+                    <i class="mdi mdi-check mr-1"></i> Satırı Ekle
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── ZIP Yükle Modal (Excel'den gelen satırlar için) ── -->
+<div class="modal fade" id="zipUploadModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="background:#1a1a2e;border:1px solid #2a2a4a;">
+            <div class="modal-header" style="border-bottom:1px solid #2a2a4a;">
+                <h5 class="modal-title text-white">
+                    <i class="mdi mdi-zip-box mr-1"></i> ZIP Dosyalarını Yükle
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted mb-3">
+                    Excel'den aktarılan her satır için ayrı ZIP dosyası seçiniz.
+                    Tüm satırlar için ZIP yüklenmeden sipariş kaydedilemez.
+                </p>
+                <div id="zipUploadList"></div>
+            </div>
+            <div class="modal-footer" style="border-top:1px solid #2a2a4a;">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Kapat</button>
+                <button type="button" class="btn btn-success" onclick="confirmZipUploads()">
+                    <i class="mdi mdi-check mr-1"></i> Onayla ve Kapat
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+    var DRAFT_KEY = 'orderDraft_v1';
+    var allUsers = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+        users.Select(u => new { id = u.Id, email = u.Email })
+    ));
+    var allProducts = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+        products.Select(p => new {
+            id = p.Id,
+            code = p.Code.ToUpper(),
+            name = p.Name,
+            price = p.Price,
+            stock = p.Stock
+        })
+    ));
+</script>
+<script src="~/js/adminOrderCreate.js"></script>
+}

@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using NTTAccountUI.Data.Repositories;
 using NTTAccountUI.Models;
@@ -9,22 +9,22 @@ namespace NTTAccountUI.Controllers;
 public class HomeController : UserBaseController
 {
     private readonly IBannerSlideRepository _bannerRepo;
-    private readonly ILogService _logService;
+    private readonly IProductRepository _productRepo; // ✅ ekle
 
     public HomeController(
         ISiteSettingsRepository siteSettingsRepository,
         IBannerSlideRepository bannerRepo,
-        ILogService logService)
+        IProductRepository productRepo) // ✅ ekle
         : base(siteSettingsRepository)
     {
         _bannerRepo = bannerRepo;
-        _logService = logService;
+        _productRepo = productRepo; // ✅ ekle
     }
     public async Task<IActionResult> Index()
     {
-        // Sadece aktif banner'lar� �ek
-        var banners = await _bannerRepo.GetActiveAsync();
-        ViewBag.Banners = banners;
+     
+        ViewBag.Banners = await _bannerRepo.GetActiveAsync();
+        ViewBag.Products = await _productRepo.GetActiveAsync(); // ✅ ekle
         return View();
     }
 }

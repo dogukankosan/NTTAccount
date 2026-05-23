@@ -2,10 +2,13 @@ wwwroot\css\site.css
 wwwroot\favicon.ico
 wwwroot\img\404.png
 wwwroot\img\500.png
+wwwroot\img\about.png
 wwwroot\img\contactbanner.png
 wwwroot\img\login.png
 wwwroot\img\logo.png
 wwwroot\img\privacy.png
+wwwroot\js\adminOrderCreate.js
+wwwroot\js\adminOrderEdit.js
 wwwroot\js\site.js
 wwwroot\lib\bootstrap\dist\css\bootstrap-grid.css
 wwwroot\lib\bootstrap\dist\css\bootstrap-grid.css.map

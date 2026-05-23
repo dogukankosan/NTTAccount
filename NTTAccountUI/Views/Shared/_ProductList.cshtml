@@ -1,0 +1,152 @@
+﻿@model IEnumerable<NTTAccountUI.Models.Entities.Product>
+
+@{
+    var productList = Model?.ToList() ?? new List<NTTAccountUI.Models.Entities.Product>();
+}
+
+<section class="products_section" id="products">
+    <div class="container">
+
+        <!-- Başlık -->
+        <div class="text-center mb-5">
+            <span class="products_badge">⚔️ MAĞAZA</span>
+            <h2 class="products_title">Ürünlerimiz</h2>
+            <p class="products_subtitle">Knight Online'ın en güvenilir hesap mağazasından satın al</p>
+        </div>
+
+        <!-- Özellik Bantları -->
+        <div class="row mb-5">
+            <div class="col-6 col-md-3 mb-3">
+                <div class="feature_badge">
+                    <div class="feature_icon_wrap">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div>
+                        <div class="feature_title">Güvenli Teslimat</div>
+                        <div class="feature_sub">%100 güvence</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3 mb-3">
+                <div class="feature_badge">
+                    <div class="feature_icon_wrap">
+                        <i class="fas fa-headset"></i>
+                    </div>
+                    <div>
+                        <div class="feature_title">7/24 Destek</div>
+                        <div class="feature_sub">Her zaman yanında</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3 mb-3">
+                <div class="feature_badge">
+                    <div class="feature_icon_wrap">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <div>
+                        <div class="feature_title">Anlık Teslimat</div>
+                        <div class="feature_sub">Dakikalar içinde</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3 mb-3">
+                <div class="feature_badge">
+                    <div class="feature_icon_wrap">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div>
+                        <div class="feature_title">Garantili Ürün</div>
+                        <div class="feature_sub">Sorunsuz alışveriş</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ürün Kartları -->
+        @if (productList.Any())
+        {
+            <div class="row">
+                @foreach (var product in productList)
+                {
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="product_card">
+
+                            <!-- Kart Üst -->
+                            <div class="product_card_top">
+                                <div class="product_icon_wrap">
+                                    <i class="fas fa-sword"></i>
+                                    ⚔️
+                                </div>
+                                <span class="product_code">@product.Code</span>
+                            </div>
+
+                            <div class="product_name">@product.Name</div>
+                            <div class="product_desc">@product.Description</div>
+
+                            <!-- Özellikler -->
+                            <ul class="product_features">
+                                <li>
+                                    <i class="fas fa-check-circle"></i>
+                                    Güvenli & Hızlı Teslimat
+                                </li>
+                                <li>
+                                    <i class="fas fa-check-circle"></i>
+                                    7/24 Aktif Müşteri Desteği
+                                </li>
+                                <li>
+                                    <i class="fas fa-check-circle"></i>
+                                    Garantili & Orijinal Hesap
+                                </li>
+                                <li>
+                                    <i class="fas fa-check-circle"></i>
+                                    Anında WhatsApp / Telegram İletişim
+                                </li>
+                                <li>
+                                    <i class="fas fa-check-circle"></i>
+                                    Sorun Olursa Tam İade Garantisi
+                                </li>
+                            </ul>
+
+                            <!-- Footer -->
+                            <div class="product_footer">
+                                <div>
+                                    <div class="product_price">@product.Price.ToString("N2") ₺</div>
+                                    @if (product.Stock <= 0)
+                                    {
+                                        <span class="product_stock out">
+                                            <i class="fas fa-times-circle"></i> Stok Yok
+                                        </span>
+                                    }
+                                    else if (product.Stock <= 5)
+                                    {
+                                        <span class="product_stock low">
+                                            <i class="fas fa-exclamation-triangle"></i> Son @product.Stock adet!
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="product_stock ok">
+                                            <i class="fas fa-check-circle"></i> Stokta Var
+                                        </span>
+                                    }
+                                </div>
+                                <a href="/Contact" class="product_buy_btn">
+                                    ⚔️ Satın Al
+                                </a>
+                            </div>
+
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="products_empty">
+                <i class="fas fa-box-open"></i>
+                <p>Henüz ürün bulunmamaktadır.</p>
+            </div>
+        }
+
+    </div>
+</section>

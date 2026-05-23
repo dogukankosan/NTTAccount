@@ -76,3 +76,4 @@ C:\Users\DOGUKAN\source\repos\NTTAccountProject\NTTAccountUI\obj\Debug\net8.0\NT
 C:\Users\DOGUKAN\source\repos\NTTAccountProject\NTTAccountUI\obj\Debug\net8.0\ref\NTTAccountUI.dll
 C:\Users\DOGUKAN\source\repos\NTTAccountProject\NTTAccountUI\bin\Debug\net8.0\BCrypt.Net-Next.dll
 C:\Users\DOGUKAN\source\repos\NTTAccountProject\NTTAccountUI\bin\Debug\net8.0\SixLabors.ImageSharp.dll
+C:\Users\DOGUKAN\source\repos\NTTAccountProject\NTTAccountUI\bin\Debug\net8.0\Newtonsoft.Json.dll

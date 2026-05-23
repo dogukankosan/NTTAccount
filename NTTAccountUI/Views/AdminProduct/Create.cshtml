@@ -1,0 +1,122 @@
+﻿@model NTTAccountUI.Models.ViewModels.ProductViewModel
+
+@{
+    ViewData["Title"] = "Yeni Ürün";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@if (!ViewData.ModelState.IsValid && ViewData.ModelState.ErrorCount > 0)
+{
+    <div class="alert alert-danger alert-dismissible fade show mb-4">
+        <i class="mdi mdi-alert-circle mr-2"></i>
+        @Html.ValidationSummary(false)
+        <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+    </div>
+}
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="card-title mb-0">Yeni Ürün Ekle</h4>
+                    <a href="@Url.Action("Index", "AdminProduct")" class="btn btn-secondary btn-sm">
+                        <i class="mdi mdi-arrow-left mr-1"></i> Geri
+                    </a>
+                </div>
+
+                <form asp-action="Create" asp-controller="AdminProduct" method="post" id="createForm">
+                    @Html.AntiForgeryToken()
+
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label">
+                            Ürün Kodu <span class="text-danger">*</span>
+                        </label>
+                        <div class="col-sm-9">
+                            <input asp-for="Code" class="form-control text-uppercase"
+                                   placeholder="Örn: NTT-001" maxlength="50" />
+                            <span asp-validation-for="Code" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label">
+                            Ürün Adı <span class="text-danger">*</span>
+                        </label>
+                        <div class="col-sm-9">
+                            <input asp-for="Name" class="form-control"
+                                   placeholder="Ürün adını girin" maxlength="200" />
+                            <span asp-validation-for="Name" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label">
+                            Açıklama <span class="text-danger">*</span>
+                        </label>
+                        <div class="col-sm-9">
+                            <textarea asp-for="Description" class="form-control" rows="4"
+                                      placeholder="Ürün açıklaması..." maxlength="1000"></textarea>
+                            <span asp-validation-for="Description" class="text-danger small"></span>
+                            <small class="text-muted">Maks. 1000 karakter</small>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label">
+                            Fiyat (₺) <span class="text-danger">*</span>
+                        </label>
+                        <div class="col-sm-9">
+                            <input asp-for="Price" type="number" step="0.01" min="0.01"
+                                   class="form-control" placeholder="0.00" />
+                            <span asp-validation-for="Price" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label">Stok Miktarı</label>
+                        <div class="col-sm-9">
+                            <input asp-for="Stock" type="number" min="0"
+                                   class="form-control" placeholder="0" />
+                            <span asp-validation-for="Stock" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label">Durum</label>
+                        <div class="col-sm-9 d-flex align-items-center">
+                            <input asp-for="IsActive" type="checkbox" id="isActiveCheck" />
+                            <label for="isActiveCheck" class="ml-2 mb-0">Aktif</label>
+                        </div>
+                    </div>
+
+                    <div class="form-group row mb-0">
+                        <div class="col-sm-9 offset-sm-3">
+                            <button type="submit" id="saveBtn" class="btn btn-primary">
+                                <i class="mdi mdi-content-save mr-1"></i> Kaydet
+                            </button>
+                            <a href="@Url.Action("Index", "AdminProduct")"
+                               class="btn btn-secondary ml-2">İptal</a>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Kod alanı otomatik büyük harf
+        document.querySelector('input[name="Code"]').addEventListener('input', function () {
+            this.value = this.value.toUpperCase();
+        });
+
+        document.getElementById('createForm').addEventListener('submit', function () {
+            var btn = document.getElementById('saveBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="mdi mdi-loading mdi-spin mr-1"></i> Kaydediliyor...';
+        });
+    </script>
+}

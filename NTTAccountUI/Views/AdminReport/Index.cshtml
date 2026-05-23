@@ -1,0 +1,749 @@
+﻿@{
+    ViewData["Title"] = "Raporlama";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<!-- Filtreler -->
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title mb-3">
+            <i class="mdi mdi-filter mr-2" style="color:#e84545;"></i>Filtrele
+        </h5>
+        <div class="row">
+            <div class="col-md-2 mb-2">
+                <label class="text-muted small">Başlangıç</label>
+                <input type="date" id="f_startDate" class="form-control form-control-sm"
+                       onchange="applyFilters()" />
+            </div>
+            <div class="col-md-2 mb-2">
+                <label class="text-muted small">Bitiş</label>
+                <input type="date" id="f_endDate" class="form-control form-control-sm"
+                       onchange="applyFilters()" />
+            </div>
+            <div class="col-md-2 mb-2">
+                <label class="text-muted small">Durum</label>
+                <select id="f_status" class="form-control form-control-sm"
+                        onchange="applyFilters()">
+                    <option value="">Tümü</option>
+                    <option value="0">Bekliyor</option>
+                    <option value="1">Kısmı Sevk</option>
+                    <option value="2">Kapandı</option>
+                </select>
+            </div>
+            <div class="col-md-3 mb-2">
+                <label class="text-muted small">Kullanıcı Email</label>
+                <input type="text" id="f_email" class="form-control form-control-sm"
+                       placeholder="ara..." oninput="applyFilters()" />
+            </div>
+            <div class="col-md-3 mb-2">
+                <label class="text-muted small">Ürün Adı / Kodu</label>
+                <input type="text" id="f_product" class="form-control form-control-sm"
+                       placeholder="ara..." oninput="applyFilters()" />
+            </div>
+        </div>
+        <div class="d-flex justify-content-between align-items-center mt-3">
+            <div>
+                <span class="text-muted small mr-3">
+                    Gösterilen: <strong id="filteredCount" style="color:#e84545;">0</strong> sipariş |
+                    Toplam: <strong id="filteredRevenue" style="color:#28a745;">0 ₺</strong>
+                </span>
+            </div>
+            <div>
+                <button type="button" class="btn btn-outline-secondary btn-sm mr-2"
+                        onclick="clearFilters()">
+                    <i class="mdi mdi-filter-remove mr-1"></i>Temizle
+                </button><button type="button" class="btn btn-success btn-sm mr-2"
+                                 onclick="exportAllOrders()">
+                    <i class="mdi mdi-download mr-1"></i> Tüm Siparişleri İndir
+                </button>
+                <button type="button" class="btn btn-outline-success btn-sm mr-2"
+                        onclick="exportExcel('orders')">
+                    <i class="mdi mdi-file-excel mr-1"></i>Siparişler Excel
+                </button>
+                <button type="button" class="btn btn-outline-info btn-sm mr-2"
+                        onclick="exportExcel('products')">
+                    <i class="mdi mdi-file-excel mr-1"></i>Ürün Bazlı Excel
+                </button>
+                <button type="button" class="btn btn-outline-warning btn-sm"
+                        onclick="exportExcel('users')">
+                    <i class="mdi mdi-file-excel mr-1"></i>Kullanıcı Bazlı Excel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Özet Kartlar -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card" style="border-left:4px solid #e84545;">
+            <div class="card-body py-3">
+                <p class="text-muted small mb-1">Toplam Sipariş</p>
+                <h3 id="s_total" style="color:#fff;margin:0;">@(ViewBag.TotalOrders ?? 0)</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card" style="border-left:4px solid #28a745;">
+            <div class="card-body py-3">
+                <p class="text-muted small mb-1">Toplam Ciro</p>
+                <h3 id="s_revenue" style="color:#fff;margin:0;font-size:18px;">
+                    @(((decimal)(ViewBag.TotalRevenue ?? 0m)).ToString("N2")) ₺
+                </h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card" style="border-left:4px solid #ffc107;">
+            <div class="card-body py-3">
+                <p class="text-muted small mb-1">Bekliyor</p>
+                <h3 id="s_pending" style="color:#fff;margin:0;">0</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card" style="border-left:4px solid #17a2b8;">
+            <div class="card-body py-3">
+                <p class="text-muted small mb-1">Kapandı</p>
+                <h3 id="s_closed" style="color:#fff;margin:0;">0</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Grafikler -->
+<div class="row mb-4">
+
+    <!-- Durum Dağılımı -->
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h6 class="card-title text-white mb-3">
+                    <i class="mdi mdi-chart-donut mr-1" style="color:#e84545;"></i>
+                    Durum Dağılımı
+                </h6>
+                <canvas id="statusChart" height="220"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Aylık Trend -->
+    <div class="col-md-8 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="card-title text-white mb-0">
+                        <i class="mdi mdi-chart-line mr-1" style="color:#e84545;"></i>
+                        Sipariş & Ciro Trendi
+                    </h6>
+                    <div>
+                        <button class="btn btn-xs btn-outline-secondary mr-1 trend-btn active"
+                                style="font-size:11px;padding:2px 8px;"
+                                onclick="setTrend('monthly', this)">Aylık</button>
+                        <button class="btn btn-xs btn-outline-secondary mr-1 trend-btn"
+                                style="font-size:11px;padding:2px 8px;"
+                                onclick="setTrend('weekly', this)">Haftalık</button>
+                        <button class="btn btn-xs btn-outline-secondary trend-btn"
+                                style="font-size:11px;padding:2px 8px;"
+                                onclick="setTrend('daily', this)">Günlük</button>
+                    </div>
+                </div>
+                <canvas id="trendChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- En Çok Satan Ürünler -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h6 class="card-title text-white mb-3">
+                    <i class="mdi mdi-chart-bar mr-1" style="color:#e84545;"></i>
+                    En Çok Satan Ürünler (Adet)
+                </h6>
+                <canvas id="productChart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kullanıcı Bazlı Ciro -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h6 class="card-title text-white mb-3">
+                    <i class="mdi mdi-chart-bar mr-1" style="color:#e84545;"></i>
+                    En Yüksek Cirolu Kullanıcılar
+                </h6>
+                <canvas id="userChart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Gruplu Tablo -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="card-title text-white mb-0">
+                <i class="mdi mdi-table mr-2" style="color:#e84545;"></i>
+                Sipariş Detayları
+            </h5>
+            <div>
+                <label class="text-muted small mr-2">Grupla:</label>
+                <select id="groupBy" class="form-control form-control-sm d-inline-block"
+                        style="width:140px;" onchange="renderTable()">
+                    <option value="none">Yok</option>
+                    <option value="product">Ürüne Göre</option>
+                    <option value="user">Kullanıcıya Göre</option>
+                    <option value="date">Tarihe Göre</option>
+                    <option value="status">Duruma Göre</option>
+                </select>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-sm" id="reportTable" style="font-size:13px;">
+                <thead id="reportThead" style="background:#111118;"></thead>
+                <tbody id="reportTbody"></tbody>
+            </table>
+        </div>
+        <div id="reportEmpty" class="text-center text-muted py-3" style="display:none;">
+            <i class="mdi mdi-information-outline mr-1"></i>Filtrelerle eşleşen sipariş yok.
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<script>
+// ── Veri ─────────────────────────────────────────────────────────────────
+var allOrders   = @Html.Raw(ViewBag.OrderDataJson ?? "[]");
+var filtered    = [];
+var trendMode   = 'monthly';
+var statusChart = null, trendChart = null, productChart = null, userChart = null;
+
+// ── Sayfa yüklenince ──────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function () {
+    // Varsayılan tarih: son 3 ay
+    var now   = new Date();
+    var start = new Date(now);
+    start.setMonth(start.getMonth() - 3);
+    document.getElementById('f_startDate').value = start.toISOString().split('T')[0];
+    document.getElementById('f_endDate').value   = now.toISOString().split('T')[0];
+    applyFilters();
+});
+
+// ── Filtrele ─────────────────────────────────────────────────────────────
+function applyFilters() {
+    var fStart   = document.getElementById('f_startDate').value;
+    var fEnd     = document.getElementById('f_endDate').value;
+    var fStatus  = document.getElementById('f_status').value;
+    var fEmail   = document.getElementById('f_email').value.trim().toLowerCase();
+    var fProduct = document.getElementById('f_product').value.trim().toLowerCase();
+
+    filtered = allOrders.filter(function (o) {
+        if (fStart && o.createdAt < fStart) return false;
+        if (fEnd   && o.createdAt > fEnd)   return false;
+        if (fStatus !== '' && String(o.status) !== fStatus) return false;
+        if (fEmail  && !(o.userEmail || '').toLowerCase().includes(fEmail)) return false;
+        if (fProduct) {
+            var match = o.items.some(function (i) {
+                return (i.productName || '').toLowerCase().includes(fProduct) ||
+                       (i.productCode || '').toLowerCase().includes(fProduct);
+            });
+            if (!match) return false;
+        }
+        return true;
+    });
+
+    updateSummary();
+    renderCharts();
+    renderTable();
+}
+
+function clearFilters() {
+    document.getElementById('f_startDate').value = '';
+    document.getElementById('f_endDate').value   = '';
+    document.getElementById('f_status').value    = '';
+    document.getElementById('f_email').value     = '';
+    document.getElementById('f_product').value   = '';
+    applyFilters();
+}
+
+// ── Özet Güncelle ────────────────────────────────────────────────────────
+function updateSummary() {
+    var total   = filtered.length;
+    var revenue = filtered.reduce(function (s, o) {
+        return s + o.items.reduce(function (ss, i) { return ss + i.total; }, 0);
+    }, 0);
+    var pending = filtered.filter(function (o) { return o.status === 0; }).length;
+    var closed  = filtered.filter(function (o) { return o.status === 2; }).length;
+
+    document.getElementById('filteredCount').textContent   = total;
+    document.getElementById('filteredRevenue').textContent = revenue.toLocaleString('tr-TR', {minimumFractionDigits:2}) + ' ₺';
+    document.getElementById('s_total').textContent   = total;
+    document.getElementById('s_revenue').textContent = revenue.toLocaleString('tr-TR', {minimumFractionDigits:2}) + ' ₺';
+    document.getElementById('s_pending').textContent = pending;
+    document.getElementById('s_closed').textContent  = closed;
+}
+
+// ── Grafikler ────────────────────────────────────────────────────────────
+function renderCharts() {
+    renderStatusChart();
+    renderTrendChart();
+    renderProductChart();
+    renderUserChart();
+}
+
+var chartDefaults = {
+    plugins: { legend: { labels: { color: '#aaa' } } },
+    scales: {
+        x: { ticks: { color: '#888' }, grid: { color: '#1e1e2e' } },
+        y: { ticks: { color: '#888' }, grid: { color: '#1e1e2e' } }
+    }
+};
+
+function renderStatusChart() {
+    var counts = [0, 0, 0];
+    filtered.forEach(function (o) { counts[o.status]++; });
+
+    if (statusChart) statusChart.destroy();
+    statusChart = new Chart(document.getElementById('statusChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Bekliyor', 'Kısmı Sevk', 'Kapandı'],
+            datasets: [{
+                data: counts,
+                backgroundColor: ['#ffc107', '#17a2b8', '#28a745'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            plugins: {
+                legend: { labels: { color: '#aaa' } }
+            },
+            cutout: '65%'
+        }
+    });
+}
+
+function setTrend(mode, btn) {
+    trendMode = mode;
+    document.querySelectorAll('.trend-btn').forEach(function (b) {
+        b.classList.remove('active');
+        b.style.borderColor = '';
+    });
+    btn.classList.add('active');
+    btn.style.borderColor = '#e84545';
+    renderTrendChart();
+}
+
+function renderTrendChart() {
+    var groups = {};
+    filtered.forEach(function (o) {
+        var key;
+        var d = new Date(o.createdAt);
+        if (trendMode === 'daily') {
+            key = o.createdAt;
+        } else if (trendMode === 'weekly') {
+            var wd  = new Date(d);
+            wd.setDate(wd.getDate() - wd.getDay());
+            key = wd.toISOString().split('T')[0];
+        } else {
+            key = o.createdAt.substring(0, 7);
+        }
+        if (!groups[key]) groups[key] = { count: 0, revenue: 0 };
+        groups[key].count++;
+        groups[key].revenue += o.items.reduce(function (s, i) { return s + i.total; }, 0);
+    });
+
+    var keys    = Object.keys(groups).sort();
+    var counts  = keys.map(function (k) { return groups[k].count; });
+    var revenues = keys.map(function (k) { return Math.round(groups[k].revenue); });
+
+    if (trendChart) trendChart.destroy();
+    trendChart = new Chart(document.getElementById('trendChart'), {
+        type: 'bar',
+        data: {
+            labels: keys,
+            datasets: [
+                {
+                    label: 'Sipariş',
+                    data: counts,
+                    backgroundColor: 'rgba(232,69,69,0.7)',
+                    yAxisID: 'y'
+                },
+                {
+                    label: 'Ciro (₺)',
+                    data: revenues,
+                    type: 'line',
+                    borderColor: '#28a745',
+                    backgroundColor: 'rgba(40,167,69,0.1)',
+                    fill: true,
+                    tension: 0.3,
+                    yAxisID: 'y2'
+                }
+            ]
+        },
+        options: {
+            plugins: { legend: { labels: { color: '#aaa' } } },
+            scales: {
+                x:  { ticks: { color: '#888' }, grid: { color: '#1e1e2e' } },
+                y:  { ticks: { color: '#888' }, grid: { color: '#1e1e2e' }, position: 'left' },
+                y2: { ticks: { color: '#888' }, grid: { display: false }, position: 'right' }
+            }
+        }
+    });
+}
+
+function renderProductChart() {
+    var groups = {};
+    filtered.forEach(function (o) {
+        o.items.forEach(function (i) {
+            var key = i.productName + ' (' + i.productCode + ')';
+            if (!groups[key]) groups[key] = 0;
+            groups[key] += i.quantity;
+        });
+    });
+
+    var sorted  = Object.keys(groups).sort(function (a, b) { return groups[b] - groups[a]; }).slice(0, 8);
+    var values  = sorted.map(function (k) { return groups[k]; });
+
+    if (productChart) productChart.destroy();
+    productChart = new Chart(document.getElementById('productChart'), {
+        type: 'bar',
+        data: {
+            labels: sorted,
+            datasets: [{
+                label: 'Adet',
+                data: values,
+                backgroundColor: 'rgba(23,162,184,0.7)'
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { ticks: { color: '#888' }, grid: { color: '#1e1e2e' } },
+                y: { ticks: { color: '#888', font: { size: 11 } }, grid: { color: '#1e1e2e' } }
+            }
+        }
+    });
+}
+
+function renderUserChart() {
+    var groups = {};
+    filtered.forEach(function (o) {
+        var key = o.userEmail || 'Bilinmiyor';
+        if (!groups[key]) groups[key] = 0;
+        groups[key] += o.items.reduce(function (s, i) { return s + i.total; }, 0);
+    });
+
+    var sorted = Object.keys(groups).sort(function (a, b) { return groups[b] - groups[a]; }).slice(0, 8);
+    var values = sorted.map(function (k) { return Math.round(groups[k]); });
+
+    if (userChart) userChart.destroy();
+    userChart = new Chart(document.getElementById('userChart'), {
+        type: 'bar',
+        data: {
+            labels: sorted,
+            datasets: [{
+                label: 'Ciro (₺)',
+                data: values,
+                backgroundColor: 'rgba(111,66,193,0.7)'
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { ticks: { color: '#888' }, grid: { color: '#1e1e2e' } },
+                y: { ticks: { color: '#888', font: { size: 11 } }, grid: { color: '#1e1e2e' } }
+            }
+        }
+    });
+}
+
+// ── Tablo ─────────────────────────────────────────────────────────────────
+function renderTable() {
+    var groupBy = document.getElementById('groupBy').value;
+    var thead   = document.getElementById('reportThead');
+    var tbody   = document.getElementById('reportTbody');
+    var empty   = document.getElementById('reportEmpty');
+
+    if (filtered.length === 0) {
+        thead.innerHTML = '';
+        tbody.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+    }
+    empty.style.display = 'none';
+
+    if (groupBy === 'none') {
+        thead.innerHTML =
+            '<tr>' +
+            '<th style="color:#888;">Sipariş No</th>' +
+            '<th style="color:#888;">Kullanıcı</th>' +
+            '<th style="color:#888;">Durum</th>' +
+            '<th style="color:#888;">Satır</th>' +
+            '<th style="color:#888;">Ciro</th>' +
+            '<th style="color:#888;">Tarih</th>' +
+            '</tr>';
+        tbody.innerHTML = filtered.map(function (o) {
+            var sc = o.status === 0 ? 'warning' : o.status === 1 ? 'info' : 'success';
+            var st = o.status === 0 ? 'Bekliyor' : o.status === 1 ? 'Kısmı Sevk' : 'Kapandı';
+            var rev = o.items.reduce(function (s, i) { return s + i.total; }, 0);
+            return '<tr style="border-bottom:1px solid #1a1a2e;">' +
+                '<td style="color:#e84545;font-weight:700;">' + o.orderNo + '</td>' +
+                '<td class="text-muted">' + (o.userEmail || '-') + '</td>' +
+                '<td><span class="badge badge-' + sc + '">' + st + '</span></td>' +
+                '<td class="text-muted">' + o.items.length + ' adet</td>' +
+                '<td style="color:#28a745;font-weight:600;">' + rev.toLocaleString('tr-TR', {minimumFractionDigits:2}) + ' ₺</td>' +
+                '<td class="text-muted">' + o.createdAtDisplay + '</td>' +
+                '</tr>';
+        }).join('');
+
+    } else if (groupBy === 'product') {
+        var groups = {};
+        filtered.forEach(function (o) {
+            o.items.forEach(function (i) {
+                var key = i.productCode;
+                if (!groups[key]) groups[key] = { name: i.productName, code: i.productCode, qty: 0, rev: 0, orders: 0 };
+                groups[key].qty += i.quantity;
+                groups[key].rev += i.total;
+                groups[key].orders++;
+            });
+        });
+        thead.innerHTML =
+            '<tr>' +
+            '<th style="color:#888;">Ürün</th>' +
+            '<th style="color:#888;">Kod</th>' +
+            '<th style="color:#888;">Sipariş Satırı</th>' +
+            '<th style="color:#888;">Toplam Adet</th>' +
+            '<th style="color:#888;">Toplam Ciro</th>' +
+            '</tr>';
+        var rows = Object.values(groups).sort(function (a, b) { return b.rev - a.rev; });
+        tbody.innerHTML = rows.map(function (g) {
+            return '<tr style="border-bottom:1px solid #1a1a2e;">' +
+                '<td style="color:#fff;">' + g.name + '</td>' +
+                '<td class="text-muted">' + g.code + '</td>' +
+                '<td class="text-muted">' + g.orders + '</td>' +
+                '<td class="text-muted">' + g.qty + '</td>' +
+                '<td style="color:#28a745;font-weight:600;">' + g.rev.toLocaleString('tr-TR', {minimumFractionDigits:2}) + ' ₺</td>' +
+                '</tr>';
+        }).join('');
+
+    } else if (groupBy === 'user') {
+        var groups = {};
+        filtered.forEach(function (o) {
+            var key = o.userEmail || 'Bilinmiyor';
+            if (!groups[key]) groups[key] = { email: key, orders: 0, items: 0, rev: 0 };
+            groups[key].orders++;
+            groups[key].items += o.items.length;
+            groups[key].rev   += o.items.reduce(function (s, i) { return s + i.total; }, 0);
+        });
+        thead.innerHTML =
+            '<tr>' +
+            '<th style="color:#888;">Kullanıcı</th>' +
+            '<th style="color:#888;">Sipariş</th>' +
+            '<th style="color:#888;">Satır</th>' +
+            '<th style="color:#888;">Toplam Ciro</th>' +
+            '</tr>';
+        var rows = Object.values(groups).sort(function (a, b) { return b.rev - a.rev; });
+        tbody.innerHTML = rows.map(function (g) {
+            return '<tr style="border-bottom:1px solid #1a1a2e;">' +
+                '<td style="color:#fff;">' + g.email + '</td>' +
+                '<td class="text-muted">' + g.orders + '</td>' +
+                '<td class="text-muted">' + g.items + '</td>' +
+                '<td style="color:#28a745;font-weight:600;">' + g.rev.toLocaleString('tr-TR', {minimumFractionDigits:2}) + ' ₺</td>' +
+                '</tr>';
+        }).join('');
+
+    } else if (groupBy === 'date') {
+        var groups = {};
+        filtered.forEach(function (o) {
+            var key = o.createdAt.substring(0, 7);
+            if (!groups[key]) groups[key] = { date: key, orders: 0, rev: 0 };
+            groups[key].orders++;
+            groups[key].rev += o.items.reduce(function (s, i) { return s + i.total; }, 0);
+        });
+        thead.innerHTML =
+            '<tr>' +
+            '<th style="color:#888;">Ay</th>' +
+            '<th style="color:#888;">Sipariş</th>' +
+            '<th style="color:#888;">Toplam Ciro</th>' +
+            '</tr>';
+        var rows = Object.values(groups).sort(function (a, b) { return b.date.localeCompare(a.date); });
+        tbody.innerHTML = rows.map(function (g) {
+            return '<tr style="border-bottom:1px solid #1a1a2e;">' +
+                '<td style="color:#fff;">' + g.date + '</td>' +
+                '<td class="text-muted">' + g.orders + '</td>' +
+                '<td style="color:#28a745;font-weight:600;">' + g.rev.toLocaleString('tr-TR', {minimumFractionDigits:2}) + ' ₺</td>' +
+                '</tr>';
+        }).join('');
+
+    } else if (groupBy === 'status') {
+        var groups = { 0: { label: 'Bekliyor', orders: 0, rev: 0 }, 1: { label: 'Kısmı Sevk', orders: 0, rev: 0 }, 2: { label: 'Kapandı', orders: 0, rev: 0 } };
+        filtered.forEach(function (o) {
+            groups[o.status].orders++;
+            groups[o.status].rev += o.items.reduce(function (s, i) { return s + i.total; }, 0);
+        });
+        thead.innerHTML =
+            '<tr>' +
+            '<th style="color:#888;">Durum</th>' +
+            '<th style="color:#888;">Sipariş</th>' +
+            '<th style="color:#888;">Toplam Ciro</th>' +
+            '</tr>';
+        tbody.innerHTML = Object.values(groups).map(function (g) {
+            return '<tr style="border-bottom:1px solid #1a1a2e;">' +
+                '<td style="color:#fff;">' + g.label + '</td>' +
+                '<td class="text-muted">' + g.orders + '</td>' +
+                '<td style="color:#28a745;font-weight:600;">' + g.rev.toLocaleString('tr-TR', {minimumFractionDigits:2}) + ' ₺</td>' +
+                '</tr>';
+        }).join('');
+    }
+}
+
+// ── Excel Export ─────────────────────────────────────────────────────────
+function exportExcel(type) {
+    var wb   = XLSX.utils.book_new();
+    var rows = [];
+
+    if (type === 'orders') {
+        rows.push(['Sipariş No', 'Kullanıcı', 'Durum', 'Ürün', 'Kod', 'Server',
+                   'Karakter ID', 'Miktar', 'Birim Fiyat', 'Toplam', 'Tarih']);
+        filtered.forEach(function (o) {
+            var st = o.status === 0 ? 'Bekliyor' : o.status === 1 ? 'Kısmı Sevk' : 'Kapandı';
+            o.items.forEach(function (i) {
+                rows.push([
+                    o.orderNo, o.userEmail, st,
+                    i.productName, i.productCode, i.serverName,
+                    i.characterId, i.quantity, i.unitPrice, i.total,
+                    o.createdAtDisplay
+                ]);
+            });
+        });
+        var ws = XLSX.utils.aoa_to_sheet(rows);
+        ws['!cols'] = [
+            {wch:18},{wch:25},{wch:12},{wch:20},{wch:12},{wch:15},
+            {wch:15},{wch:8},{wch:12},{wch:12},{wch:18}
+        ];
+        XLSX.utils.book_append_sheet(wb, ws, 'Siparisler');
+        XLSX.writeFile(wb, 'Siparisler_' + formatDate() + '.xlsx');
+
+    } else if (type === 'products') {
+        var groups = {};
+        filtered.forEach(function (o) {
+            o.items.forEach(function (i) {
+                if (!groups[i.productCode]) groups[i.productCode] = {
+                    name: i.productName, code: i.productCode, qty: 0, rev: 0, orders: 0
+                };
+                groups[i.productCode].qty += i.quantity;
+                groups[i.productCode].rev += i.total;
+                groups[i.productCode].orders++;
+            });
+        });
+        rows.push(['Ürün Adı', 'Kod', 'Sipariş Satırı', 'Toplam Adet', 'Toplam Ciro (TL)']);
+        Object.values(groups).sort(function (a, b) { return b.rev - a.rev; }).forEach(function (g) {
+            rows.push([g.name, g.code, g.orders, g.qty, g.rev]);
+        });
+        var ws = XLSX.utils.aoa_to_sheet(rows);
+        ws['!cols'] = [{wch:25},{wch:12},{wch:14},{wch:14},{wch:18}];
+        XLSX.utils.book_append_sheet(wb, ws, 'Urun_Bazli');
+        XLSX.writeFile(wb, 'UrunRaporu_' + formatDate() + '.xlsx');
+
+    } else if (type === 'users') {
+        var groups = {};
+        filtered.forEach(function (o) {
+            var key = o.userEmail || 'Bilinmiyor';
+            if (!groups[key]) groups[key] = { email: key, orders: 0, items: 0, rev: 0 };
+            groups[key].orders++;
+            groups[key].items += o.items.length;
+            groups[key].rev   += o.items.reduce(function (s, i) { return s + i.total; }, 0);
+        });
+        rows.push(['Kullanıcı Email', 'Toplam Sipariş', 'Toplam Satır', 'Toplam Ciro (TL)']);
+        Object.values(groups).sort(function (a, b) { return b.rev - a.rev; }).forEach(function (g) {
+            rows.push([g.email, g.orders, g.items, g.rev]);
+        });
+        var ws = XLSX.utils.aoa_to_sheet(rows);
+        ws['!cols'] = [{wch:30},{wch:16},{wch:14},{wch:18}];
+        XLSX.utils.book_append_sheet(wb, ws, 'Kullanici_Bazli');
+        XLSX.writeFile(wb, 'KullaniciRaporu_' + formatDate() + '.xlsx');
+    }
+}
+
+function formatDate() {
+    var d = new Date();
+    return d.getFullYear() + '' +
+        String(d.getMonth()+1).padStart(2,'0') +
+        String(d.getDate()).padStart(2,'0');
+        }
+            function exportAllOrders() {
+            var wb   = XLSX.utils.book_new();
+            var rows = [];
+
+            rows.push([
+                'Sipariş No', 'Kullanıcı', 'Sipariş Notu', 'Durum',
+                'Ürün Adı', 'Ürün Kodu', 'Server Adı',
+                'Karakter ID', 'Karakter Şifresi',
+                'Karakter Mail', 'Mail Şifresi',
+                'OTP Kodu', 'OTP Şifresi',
+                'Miktar', 'Birim Fiyat (₺)', 'Toplam (₺)',
+                'Satır Durumu', 'Tarih'
+            ]);
+
+            allOrders.forEach(function (o) {
+                var st = o.status === 0 ? 'Bekliyor'
+                       : o.status === 1 ? 'Kısmi Sevk' : 'Kapandı';
+                o.items.forEach(function (i) {
+                    rows.push([
+                        o.orderNo,
+                        o.userEmail        || '',
+                        o.note             || '',
+                        st,
+                        i.productName      || '',
+                        i.productCode      || '',
+                        i.serverName       || '',
+                        i.characterId      || '',
+                        i.characterPw      || '',
+                        i.characterMail    || '',
+                        i.characterMailPw  || '',
+                        i.otpCode          || '',
+                        i.otpPassword      || '',
+                        i.quantity,
+                        i.unitPrice,
+                        i.total,
+                        i.isClosed ? 'Kapandı' : 'Açık',
+                        o.createdAtDisplay
+                    ]);
+                });
+            });
+
+            var ws = XLSX.utils.aoa_to_sheet(rows);
+            ws['!cols'] = [
+                {wch:18}, // Sipariş No
+                {wch:25}, // Kullanıcı
+                {wch:20}, // Not
+                {wch:12}, // Durum
+                {wch:20}, // Ürün Adı
+                {wch:12}, // Ürün Kodu
+                {wch:15}, // Server
+                {wch:15}, // Karakter ID
+                {wch:15}, // Karakter Şifre
+                {wch:25}, // Karakter Mail
+                {wch:15}, // Mail Şifre
+                {wch:12}, // OTP Kodu
+                {wch:15}, // OTP Şifre
+                {wch:8},  // Miktar
+                {wch:14}, // Birim Fiyat
+                {wch:14}, // Toplam
+                {wch:12}, // Satır Durumu
+                {wch:18}  // Tarih
+            ];
+
+            XLSX.utils.book_append_sheet(wb, ws, 'Tum_Siparisler');
+            XLSX.writeFile(wb, 'TumSiparisler_' + formatDate() + '.xlsx');
+        }
+</script>
+}

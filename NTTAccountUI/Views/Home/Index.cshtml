@@ -15,7 +15,288 @@
             overflow: hidden;
             background: #0d0d0d;
         }
+        /* ── Ürünler Section ── */
+        .products_section {
+            padding: 90px 0;
+            background: linear-gradient(180deg, #0a0a12 0%, #0d0d1a 100%);
+            position: relative;
+        }
 
+        .about_us_img img {
+            max-width: 100%;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+            .products_section::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 1px;
+                background: linear-gradient(90deg, transparent, #e84545, transparent);
+            }
+
+        /* Başlık */
+        .products_badge {
+            display: inline-block;
+            background: rgba(232,69,69,0.1);
+            color: #e84545;
+            border: 1px solid rgba(232,69,69,0.3);
+            border-radius: 20px;
+            padding: 4px 18px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            margin-bottom: 16px;
+        }
+
+        .section_title h2 {
+            color: #fff;
+            font-size: 38px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            text-shadow: 0 0 40px rgba(232,69,69,0.3);
+        }
+
+        .section_title p {
+            color: #666;
+            font-size: 15px;
+        }
+
+        /* Özellik Bantları */
+        .feature_badge {
+            background: #111118;
+            border: 1px solid #1e1e2e;
+            border-radius: 10px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s;
+        }
+
+            .feature_badge:hover {
+                border-color: #e84545;
+                background: rgba(232,69,69,0.05);
+            }
+
+            .feature_badge i {
+                font-size: 24px;
+                color: #e84545;
+                flex-shrink: 0;
+            }
+
+            .feature_badge span {
+                color: #ccc;
+                font-size: 13px;
+                font-weight: 600;
+            }
+
+        /* Ürün Kartı */
+        .product_card {
+            background: #111118;
+            border: 1px solid #1e1e2e;
+            border-radius: 14px;
+            padding: 28px 24px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.35s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .product_card::after {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 3px;
+                background: linear-gradient(90deg, #e84545, #c62a88);
+                opacity: 0;
+                transition: opacity 0.3s;
+            }
+
+            .product_card:hover {
+                border-color: rgba(232,69,69,0.5);
+                transform: translateY(-8px);
+                box-shadow: 0 24px 48px rgba(232,69,69,0.12);
+            }
+
+                .product_card:hover::after {
+                    opacity: 1;
+                }
+
+        /* Kart Üst */
+        .product_card_top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 18px;
+        }
+
+        .product_icon_wrap {
+            width: 48px;
+            height: 48px;
+            background: rgba(232,69,69,0.1);
+            border: 1px solid rgba(232,69,69,0.2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .product_card:hover .product_icon_wrap {
+            background: rgba(232,69,69,0.2);
+            border-color: #e84545;
+        }
+
+        .product_icon_wrap i {
+            font-size: 22px;
+            color: #e84545;
+        }
+
+        .product_code {
+            background: rgba(232,69,69,0.08);
+            color: #e84545;
+            border: 1px solid rgba(232,69,69,0.2);
+            border-radius: 4px;
+            padding: 3px 10px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .product_name {
+            color: #fff;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+
+        .product_desc {
+            color: #666;
+            font-size: 13px;
+            line-height: 1.7;
+            margin-bottom: 18px;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* Özellik Listesi */
+        .product_features {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 20px 0;
+            flex: 1;
+        }
+
+            .product_features li {
+                color: #777;
+                font-size: 12px;
+                padding: 5px 0;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                border-bottom: 1px solid #1a1a2a;
+            }
+
+                .product_features li:last-child {
+                    border-bottom: none;
+                }
+
+                .product_features li i {
+                    color: #e84545;
+                    font-size: 14px;
+                    flex-shrink: 0;
+                }
+
+        /* Footer */
+        .product_footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-top: 1px solid #1e1e2e;
+            padding-top: 18px;
+            margin-top: auto;
+            gap: 12px;
+        }
+
+        .product_price {
+            color: #e84545;
+            font-size: 22px;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 6px;
+        }
+
+        .product_stock {
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+            .product_stock.ok {
+                color: #28a745;
+            }
+
+            .product_stock.low {
+                color: #ffc107;
+            }
+
+            .product_stock.out {
+                color: #555;
+            }
+
+        .product_buy_btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, #e84545, #c62a88);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 18px;
+            font-size: 13px;
+            font-weight: 700;
+            text-decoration: none;
+            white-space: nowrap;
+            transition: all 0.3s;
+            font-family: 'Cinzel', serif;
+            letter-spacing: 1px;
+        }
+
+            .product_buy_btn:hover {
+                color: #fff;
+                opacity: 0.85;
+                transform: scale(1.04);
+                text-decoration: none;
+            }
+
+            .product_buy_btn i {
+                font-size: 16px;
+            }
+
+        /* Boş durum */
+        .products_empty {
+            text-align: center;
+            padding: 80px 0;
+            color: #555;
+        }
+
+            .products_empty i {
+                font-size: 56px;
+                margin-bottom: 20px;
+                display: block;
+                color: #2a2a3a;
+            }
         .banner_slide {
             position: absolute;
             inset: 0;
@@ -207,23 +488,42 @@ else
         </div>
     </section>
 }
-
 <!-- About -->
 <section class="about_us section_padding">
     <div class="container">
         <div class="row align-items-center justify-content-between">
-            <div class="col-md-7 col-lg-6 col-xl-5">
+
+            <!-- Sol taraf yazılar -->
+            <div class="col-md-6 col-lg-5">
                 <div class="about_us_text">
                     <h2>@(ViewBag.SiteName ?? "NTT Hesap") Hakkında</h2>
                     <p>@(ViewBag.AboutText ?? ViewBag.SiteDescription ?? "Knight Online")</p>
+
                     <a href="/AdminLogin" class="btn_1">Giriş Yap</a>
                     <a href="/Contact" class="btn_1">İletişim</a>
                 </div>
             </div>
+
+            <!-- Sağ taraf görsel -->
+            <div class="col-md-6 col-lg-7 text-center">
+                <div class="about_us_img">
+                    <img src="/img/about.png"
+                         alt="About Image"
+                         class="img-fluid"
+                         loading="lazy"
+                         decoding="async"
+                         width="800"
+                         height="800">
+                </div>
+            </div>
+
         </div>
     </div>
 </section>
-
+<!-- ✅ Ürünler Partial -->
+@await Html.PartialAsync("_ProductList",
+ViewBag.Products as IEnumerable<NTTAccountUI.Models.Entities.Product>
+?? Enumerable.Empty<NTTAccountUI.Models.Entities.Product>())
 @section Scripts {
     <script>
         (function () {

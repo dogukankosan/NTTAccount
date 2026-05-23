@@ -1,0 +1,401 @@
+﻿@model IEnumerable<NTTAccountUI.Models.Entities.Order>
+
+@{
+    ViewData["Title"] = "Siparişlerim";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show mb-4">
+        <i class="mdi mdi-alert-circle mr-2"></i> @TempData["Error"]
+        <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+    </div>
+}
+
+<!-- Filtreler -->
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title mb-3">
+            <i class="mdi mdi-filter mr-1"></i> Filtrele
+        </h5>
+        <div class="row">
+            <div class="col-md-3 mb-2">
+                <input type="text" id="f_orderNo" class="form-control form-control-sm"
+                       placeholder="Sipariş No" oninput="applyFilters()" />
+            </div>
+            <div class="col-md-3 mb-2">
+                <input type="text" id="f_charId" class="form-control form-control-sm"
+                       placeholder="Karakter ID" oninput="applyFilters()" />
+            </div>
+            <div class="col-md-3 mb-2">
+                <input type="text" id="f_charMail" class="form-control form-control-sm"
+                       placeholder="Karakter Mail" oninput="applyFilters()" />
+            </div>
+            <div class="col-md-3 mb-2">
+    <input type="text" id="f_otpCode" class="form-control form-control-sm"
+           placeholder="OTP Kodu" oninput="applyFilters()" />
+</div>
+            <div class="col-md-3 mb-2">
+                <select id="f_status" class="form-control form-control-sm"
+                        onchange="applyFilters()">
+                    <option value="">Tüm Durumlar</option>
+                    <option value="0">Bekliyor</option>
+                    <option value="1">Kısmı Sevk</option>
+                    <option value="2">Kapandı</option>
+                </select>
+            </div>
+        </div>
+        <div class="d-flex justify-content-between align-items-center mt-2">
+            <small class="text-muted">
+                Toplam: <span id="totalCount">@Model.Count()</span> sipariş |
+                Gösterilen: <span id="visibleCount">@Model.Count()</span>
+            </small>
+            <button type="button" class="btn btn-outline-secondary btn-sm"
+                    onclick="clearFilters()">
+                <i class="mdi mdi-filter-remove mr-1"></i> Filtreleri Temizle
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Başlık -->
+<div class="card mb-3">
+    <div class="card-body py-3">
+        <div class="d-flex justify-content-between align-items-center">
+            <h4 class="card-title mb-0">
+                <i class="mdi mdi-clipboard-list mr-2" style="color:#e84545;"></i>
+                Siparişlerim
+            </h4>
+            <small class="text-muted">
+                Teslim edilen ürünlerinizi görüntüleyebilir ve indirebilirsiniz.
+            </small>
+        </div>
+    </div>
+</div>
+
+<!-- Sipariş Listesi -->
+<div id="orderList">
+    @if (!Model.Any())
+    {
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="mdi mdi-clipboard-list mdi-48px d-block mb-3"
+                   style="color:#2a2a3a;"></i>
+                <p class="text-muted">Henüz siparişiniz bulunmamaktadır.</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        @foreach (var order in Model)
+        {
+            var closedItems = order.Items.Where(i => i.IsClosed).ToList();
+            var statusClass = order.Status == 0 ? "warning"
+                            : order.Status == 1 ? "info" : "success";
+            var statusText  = order.Status == 0 ? "Bekliyor"
+                            : order.Status == 1 ? "Kısmı Sevk" : "Kapandı";
+
+            <div class="order-card mb-3"
+                 data-orderno="@order.OrderNo.ToLower()"
+                 data-status="@order.Status"
+              data-items='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+    closedItems.Select(i => new {
+        charId   = i.CharacterId   != null ? i.CharacterId.ToLower()   : "",
+        charMail = i.CharacterMail != null ? i.CharacterMail.ToLower() : "",
+        otpCode  = i.OtpCode       != null ? i.OtpCode.ToLower()       : ""
+    })))'
+                 style="border:1px solid #1e1e2e;border-radius:10px;overflow:hidden;">
+
+                <!-- Başlık -->
+                <div class="d-flex justify-content-between align-items-center px-3 py-2"
+                     style="background:#1a1a2e;cursor:pointer;"
+                     onclick="toggleOrder(@order.Id)">
+
+                    <div class="d-flex align-items-center flex-wrap">
+                        <i class="mdi mdi-chevron-right mr-2"
+                           id="icon_@order.Id"
+                           style="transition:transform 0.2s;color:#e84545;font-size:18px;"></i>
+                        <span style="color:#e84545;font-weight:700;font-size:14px;">
+                            @order.OrderNo
+                        </span>
+                        <span class="badge badge-@statusClass ml-2">@statusText</span>
+                        <small class="text-muted ml-3">
+                            <i class="mdi mdi-calendar mr-1"></i>
+                            @order.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")
+                        </small>
+                        <small class="text-muted ml-3">
+                            <i class="mdi mdi-package-variant mr-1"></i>
+                            @closedItems.Count teslim edildi
+                        </small>
+                    </div>
+
+                    <div onclick="event.stopPropagation()">
+                        @if (closedItems.Any())
+                        {
+                            <a href="@Url.Action("DownloadAll", "Order", new { orderId = order.Id })"
+                               class="btn btn-sm btn-outline-danger">
+                                <i class="mdi mdi-download-multiple mr-1"></i> Tümünü İndir
+                            </a>
+                        }
+                    </div>
+                </div>
+
+                <!-- Detay -->
+                <div id="detail_@order.Id" style="display:none;">
+
+                    @if (!string.IsNullOrEmpty(order.Note))
+                    {
+                        <div class="px-3 py-2"
+                             style="background:#0d0d1a;border-bottom:1px solid #1e1e2e;">
+                            <small style="color:#666;">
+                                <i class="mdi mdi-note-text mr-1"></i> @order.Note
+                            </small>
+                        </div>
+                    }
+
+                    @if (!closedItems.Any())
+                    {
+                        <div class="text-center text-muted py-4">
+                            <i class="mdi mdi-clock-outline mdi-36px d-block mb-2"></i>
+                            Henüz teslim edilmiş ürün bulunmamaktadır.
+                        </div>
+                    }
+                    else
+                    {
+                        @foreach (var item in closedItems)
+                        {
+                            <div style="border-bottom:1px solid #1a1a2e;padding:20px;">
+
+                                <!-- Ürün Başlık + İndir -->
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div>
+                                        <strong style="color:#fff;font-size:15px;">
+                                            @item.ProductName
+                                        </strong>
+                                        <span class="badge badge-warning ml-2">
+                                            @item.ProductCode
+                                        </span>
+                                        <br>
+                                        <small class="text-muted">
+                                            <i class="mdi mdi-server mr-1"
+                                               style="color:#e84545;"></i>@item.ServerName
+                                            &nbsp;|&nbsp;
+                                            <i class="mdi mdi-package-variant mr-1"
+                                               style="color:#e84545;"></i>@item.Quantity
+                                            &nbsp;|&nbsp;
+                                            <span style="color:#e84545;font-weight:700;">
+                                                @item.UnitPrice.ToString("N2") ₺
+                                            </span>
+                                        </small>
+                                    </div>
+                                    <a href="@Url.Action("DownloadZip", "Order", new { itemId = item.Id, orderId = order.Id })"
+                                       class="btn btn-sm btn-danger ml-2"
+                                       style="white-space:nowrap;">
+                                        <i class="mdi mdi-download mr-1"></i> İndir
+                                    </a>
+                                </div>
+
+                                <!-- Hesap Bilgileri -->
+                                <div class="row">
+                                    <div class="col-md-4 col-sm-6 mb-2">
+                                        <div class="p-2 rounded"
+                                             style="background:#0d0d1a;border:1px solid #1e1e2e;">
+                                            <div style="color:#555;font-size:11px;
+                                                        text-transform:uppercase;
+                                                        letter-spacing:1px;margin-bottom:4px;">
+                                                Karakter ID
+                                            </div>
+                                            <div style="color:#fff;font-size:13px;font-weight:600;">
+                                                @item.CharacterId
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 col-sm-6 mb-2">
+                                        <div class="p-2 rounded"
+                                             style="background:#0d0d1a;border:1px solid #1e1e2e;">
+                                            <div style="color:#555;font-size:11px;
+                                                        text-transform:uppercase;
+                                                        letter-spacing:1px;margin-bottom:4px;">
+                                                Karakter Şifresi
+                                            </div>
+                                            <div class="d-flex align-items-center">
+                                                <span id="cpw_@item.Id"
+                                                      style="color:#fff;font-size:13px;
+                                                             font-weight:600;font-family:monospace;
+                                                             letter-spacing:2px;">
+                                                    ••••••••
+                                                </span>
+                                                <button class="btn btn-sm ml-2"
+                                                        style="padding:0 4px;background:transparent;
+                                                               border:none;"
+                                                        onclick="togglePw('cpw_@item.Id', this, '@Html.Raw(item.CharacterPw)')">
+                                                    <i class="mdi mdi-eye" style="color:#888;"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 col-sm-6 mb-2">
+                                        <div class="p-2 rounded"
+                                             style="background:#0d0d1a;border:1px solid #1e1e2e;">
+                                            <div style="color:#555;font-size:11px;
+                                                        text-transform:uppercase;
+                                                        letter-spacing:1px;margin-bottom:4px;">
+                                                Karakter Mail
+                                            </div>
+                                            <div style="color:#fff;font-size:13px;
+                                                        font-weight:600;word-break:break-all;">
+                                                @item.CharacterMail
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 col-sm-6 mb-2">
+                                        <div class="p-2 rounded"
+                                             style="background:#0d0d1a;border:1px solid #1e1e2e;">
+                                            <div style="color:#555;font-size:11px;
+                                                        text-transform:uppercase;
+                                                        letter-spacing:1px;margin-bottom:4px;">
+                                                Mail Şifresi
+                                            </div>
+                                            <div class="d-flex align-items-center">
+                                                <span id="mpw_@item.Id"
+                                                      style="color:#fff;font-size:13px;
+                                                             font-weight:600;font-family:monospace;
+                                                             letter-spacing:2px;">
+                                                    ••••••••
+                                                </span>
+                                                <button class="btn btn-sm ml-2"
+                                                        style="padding:0 4px;background:transparent;
+                                                               border:none;"
+                                                        onclick="togglePw('mpw_@item.Id', this, '@Html.Raw(item.CharacterMailPw)')">
+                                                    <i class="mdi mdi-eye" style="color:#888;"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 col-sm-6 mb-2">
+                                        <div class="p-2 rounded"
+                                             style="background:#0d0d1a;border:1px solid #1e1e2e;">
+                                            <div style="color:#555;font-size:11px;
+                                                        text-transform:uppercase;
+                                                        letter-spacing:1px;margin-bottom:4px;">
+                                                OTP Kodu
+                                            </div>
+                                            <div style="color:#fff;font-size:13px;font-weight:600;">
+                                                @item.OtpCode
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 col-sm-6 mb-2">
+                                        <div class="p-2 rounded"
+                                             style="background:#0d0d1a;border:1px solid #1e1e2e;">
+                                            <div style="color:#555;font-size:11px;
+                                                        text-transform:uppercase;
+                                                        letter-spacing:1px;margin-bottom:4px;">
+                                                OTP Şifresi
+                                            </div>
+                                            <div class="d-flex align-items-center">
+                                                <span id="opw_@item.Id"
+                                                      style="color:#fff;font-size:13px;
+                                                             font-weight:600;font-family:monospace;
+                                                             letter-spacing:2px;">
+                                                    ••••••••
+                                                </span>
+                                                <button class="btn btn-sm ml-2"
+                                                        style="padding:0 4px;background:transparent;
+                                                               border:none;"
+                                                        onclick="togglePw('opw_@item.Id', this, '@Html.Raw(item.OtpPassword)')">
+                                                    <i class="mdi mdi-eye" style="color:#888;"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@section Scripts {
+<script>
+    // ── Accordion ─────────────────────────────────────────────────────────
+    function toggleOrder(id) {
+        var detail = document.getElementById('detail_' + id);
+        var icon   = document.getElementById('icon_' + id);
+        if (detail.style.display === 'none') {
+            detail.style.display = 'block';
+            icon.style.transform = 'rotate(90deg)';
+        } else {
+            detail.style.display = 'none';
+            icon.style.transform = 'rotate(0deg)';
+        }
+    }
+
+    // ── Şifre göster/gizle ────────────────────────────────────────────────
+    var pwState = {};
+    function togglePw(spanId, btn, value) {
+        var span = document.getElementById(spanId);
+        var icon = btn.querySelector('i');
+        if (pwState[spanId]) {
+            span.textContent = '••••••••';
+            icon.className   = 'mdi mdi-eye';
+            icon.style.color = '#888';
+            pwState[spanId]  = false;
+        } else {
+            span.textContent = value;
+            icon.className   = 'mdi mdi-eye-off';
+            icon.style.color = '#e84545';
+            pwState[spanId]  = true;
+        }
+    }
+
+function applyFilters() {
+    var fOrderNo  = document.getElementById('f_orderNo').value.trim().toLowerCase();
+    var fCharId   = document.getElementById('f_charId').value.trim().toLowerCase();
+    var fCharMail = document.getElementById('f_charMail').value.trim().toLowerCase();
+    var fOtpCode  = document.getElementById('f_otpCode').value.trim().toLowerCase(); // ✅
+    var fStatus   = document.getElementById('f_status').value;
+
+    var cards   = document.querySelectorAll('.order-card');
+    var visible = 0;
+
+    cards.forEach(function (card) {
+        var orderNo = card.dataset.orderno || '';
+        var status  = card.dataset.status  || '';
+        var items   = [];
+        try { items = JSON.parse(card.dataset.items || '[]'); } catch (e) {}
+
+        var matchOrderNo  = !fOrderNo  || orderNo.includes(fOrderNo);
+        var matchStatus   = !fStatus   || status === fStatus;
+        var matchCharId   = !fCharId   || items.some(function (i) {
+            return (i.charId || '').includes(fCharId);
+        });
+        var matchCharMail = !fCharMail || items.some(function (i) {
+            return (i.charMail || '').includes(fCharMail);
+        });
+        var matchOtpCode  = !fOtpCode  || items.some(function (i) { // ✅
+            return (i.otpCode || '').includes(fOtpCode);
+        });
+
+        var show = matchOrderNo && matchStatus && matchCharId
+                   && matchCharMail && matchOtpCode; // ✅
+        card.style.display = show ? 'block' : 'none';
+        if (show) visible++;
+    });
+
+    document.getElementById('visibleCount').textContent = visible;
+}
+
+function clearFilters() {
+    ['f_orderNo', 'f_charId', 'f_charMail', 'f_otpCode'].forEach(function (id) { // ✅
+        document.getElementById(id).value = '';
+    });
+    document.getElementById('f_status').value = '';
+    applyFilters();
+}
+</script>
+}

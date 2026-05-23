@@ -1,0 +1,698 @@
+﻿@model NTTAccountUI.Models.ViewModels.OrderViewModel
+
+@{
+    ViewData["Title"] = "Sipariş Düzenle";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var products = ViewBag.Products as IEnumerable<NTTAccountUI.Models.Entities.Product>
+                   ?? Enumerable.Empty<NTTAccountUI.Models.Entities.Product>();
+    var users = ViewBag.Users as IEnumerable<NTTAccountUI.Models.Entities.User>
+                ?? Enumerable.Empty<NTTAccountUI.Models.Entities.User>();
+    bool isClosed = Model.Status == 2;
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show mb-4">
+        <i class="mdi mdi-check-circle mr-2"></i> @TempData["Success"]
+        <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show mb-4">
+        <i class="mdi mdi-alert-circle mr-2"></i> @TempData["Error"]
+        <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+    </div>
+}
+
+@if (isClosed)
+{
+    <div class="alert alert-warning mb-4">
+        <i class="mdi mdi-lock mr-2"></i>
+        Bu sipariş kapanmıştır. Düzenleme yapılamaz.
+    </div>
+}
+
+<div class="row">
+
+    <!-- Sol: Form -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="card-title mb-0">
+                        Sipariş: <span style="color:#e84545;">@Model.OrderNo</span>
+                    </h4>
+                    <a href="@Url.Action("Index", "AdminOrder")"
+                       class="btn btn-secondary btn-sm">
+                        <i class="mdi mdi-arrow-left mr-1"></i> Geri
+                    </a>
+                </div>
+
+                @if (!isClosed)
+                {
+                    <form asp-action="Edit" asp-controller="AdminOrder" method="post"
+                          enctype="multipart/form-data" id="editForm">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="Id" />
+                        <input type="hidden" asp-for="OrderNo" />
+
+                        <!-- Kullanıcı -->
+                        <div class="form-group row">
+                            <label class="col-sm-3 col-form-label">Kullanıcı</label>
+                            <div class="col-sm-9">
+                                <select name="UserId" class="form-control">
+                                    @foreach (var user in users)
+                                    {
+                                        if (user.Id == Model.UserId)
+                                        {
+                                            <option value="@user.Id" selected>@user.Email</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@user.Id">@user.Email</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Not -->
+                        <div class="form-group row">
+                            <label class="col-sm-3 col-form-label">Sipariş Notu</label>
+                            <div class="col-sm-9">
+                                <textarea name="Note" class="form-control"
+                                      rows="2">@Model.Note</textarea>
+                            </div>
+                        </div>
+
+                        <!-- Satırlar -->
+                        <div class="d-flex justify-content-between align-items-center mb-3 mt-4">
+                            <h5 class="text-white mb-0">
+                                <i class="mdi mdi-format-list-bulleted mr-1"></i>
+                                Sipariş Satırları
+                                <span class="badge badge-primary ml-1" id="rowCount">
+                                    @Model.Items.Count
+                                </span>
+                            </h5>
+                            <button type="button" class="btn btn-success btn-sm"
+                                    data-toggle="modal" data-target="#addItemModal">
+                                <i class="mdi mdi-plus mr-1"></i> Satır Ekle
+                            </button>
+                        </div>
+
+                        <div class="table-responsive mb-4">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Ürün</th>
+                                        <th>Server</th>
+                                        <th>Miktar</th>
+                                        <th>Fiyat</th>
+                                        <th>ZIP</th>
+                                        <th>İşlem</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="itemsTableBody">
+                                    @for (int i = 0; i < Model.Items.Count; i++)
+                                    {
+                                        var item = Model.Items[i];
+
+                                        @if (!item.IsClosed)
+                                        {
+                                            <tr id="editRow_@i">
+                                                <td>@(i + 1)</td>
+                                                <td>
+                                                    <strong style="color:#fff;">@item.ProductName</strong><br>
+                                                    <small class="text-muted">@item.ProductCode</small>
+                                                </td>
+                                                <td style="color:#ccc;">@item.ServerName</td>
+                                                <td>
+                                                    <input type="number" name="Items[@i].Quantity"
+                                                           class="form-control form-control-sm"
+                                                           value="@item.Quantity" min="1"
+                                                           style="width:80px;" />
+                                                </td>
+                                                <td>
+                                                    <input type="text" name="Items[@i].UnitPriceRaw"
+                                                           class="form-control form-control-sm"
+                                                           value="@item.UnitPrice.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                                           style="width:100px;"
+                                                           oninput="fixDecimal(this)" />
+                                                </td>
+                                                <td>
+                                                    @if (!string.IsNullOrEmpty(item.ZipFile))
+                                                    {
+                                                        <span class="badge badge-success">
+                                                            <i class="mdi mdi-check-circle mr-1"></i>ZIP Var
+                                                        </span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge badge-danger">ZIP Yok</span>
+                                                    }
+                                                </td>
+                                                <td>
+                                                    <button type="button" class="btn btn-danger btn-sm"
+                                                            onclick="removeEditRow(@i)">
+                                                        <i class="mdi mdi-delete"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+
+                                            <!-- Hidden inputs -->
+                                            <input type="hidden" name="Items[@i].Id" value="@item.Id" />
+                                            <input type="hidden" name="Items[@i].ProductId" value="@item.ProductId" />
+                                            <input type="hidden" name="Items[@i].ZipFile" value="@item.ZipFile" />
+                                            <input type="hidden" name="Items[@i].IsClosed" value="false" />
+                                            <!-- Sync hidden inputs — sağ panelden güncellenir -->
+                                            <input type="hidden" name="Items[@i].ServerName" value="@item.ServerName" id="fn_server_@i" />
+                                            <input type="hidden" name="Items[@i].CharacterId" value="@item.CharacterId" id="fn_charId_@i" />
+                                            <input type="hidden" name="Items[@i].CharacterPw" value="@item.CharacterPw" id="fn_charPw_@i" />
+                                            <input type="hidden" name="Items[@i].CharacterMail" value="@item.CharacterMail" id="fn_charMail_@i" />
+                                            <input type="hidden" name="Items[@i].CharacterMailPw" value="@item.CharacterMailPw" id="fn_mailPw_@i" />
+                                            <input type="hidden" name="Items[@i].OtpCode" value="@item.OtpCode" id="fn_otpCode_@i" />
+                                            <input type="hidden" name="Items[@i].OtpPassword" value="@item.OtpPassword" id="fn_otpPw_@i" />
+                                        }
+                                        else
+                                        {
+                                            <tr id="editRow_@i" style="background:rgba(40,167,69,0.05);">
+                                                <td>@(i + 1)</td>
+                                                <td>
+                                                    <strong style="color:#fff;">@item.ProductName</strong><br>
+                                                    <small class="text-muted">@item.ProductCode</small>
+                                                </td>
+                                                <td style="color:#ccc;">@item.ServerName</td>
+                                                <td style="color:#ccc;">@item.Quantity</td>
+                                                <td style="color:#e84545;">@item.UnitPrice.ToString("N2") ₺</td>
+                                                <td>
+                                                    @if (!string.IsNullOrEmpty(item.ZipFile))
+                                                    {
+                                                        <span class="badge badge-success">ZIP Var</span>
+                                                    }
+                                                </td>
+                                                <td><span class="badge badge-success">Kapandı</span></td>
+                                            </tr>
+
+                                            <input type="hidden" name="Items[@i].Id" value="@item.Id" />
+                                            <input type="hidden" name="Items[@i].ProductId" value="@item.ProductId" />
+                                            <input type="hidden" name="Items[@i].Quantity" value="@item.Quantity" />
+                                            <input type="hidden" name="Items[@i].UnitPrice"
+                                                   value="@item.UnitPrice.ToString(System.Globalization.CultureInfo.InvariantCulture)" />
+                                            <input type="hidden" name="Items[@i].UnitPriceRaw"
+                                                   value="@item.UnitPrice.ToString(System.Globalization.CultureInfo.InvariantCulture)" />
+                                            <input type="hidden" name="Items[@i].ServerName" value="@item.ServerName" />
+                                            <input type="hidden" name="Items[@i].CharacterId" value="@item.CharacterId" />
+                                            <input type="hidden" name="Items[@i].CharacterPw" value="@item.CharacterPw" />
+                                            <input type="hidden" name="Items[@i].CharacterMail" value="@item.CharacterMail" />
+                                            <input type="hidden" name="Items[@i].CharacterMailPw" value="@item.CharacterMailPw" />
+                                            <input type="hidden" name="Items[@i].OtpCode" value="@item.OtpCode" />
+                                            <input type="hidden" name="Items[@i].OtpPassword" value="@item.OtpPassword" />
+                                            <input type="hidden" name="Items[@i].ZipFile" value="@item.ZipFile" />
+                                            <input type="hidden" name="Items[@i].IsClosed" value="true" />
+                                        }
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div id="newItemInputs"></div>
+
+                        <div class="mt-2">
+                            <button type="submit" id="saveBtn" class="btn btn-primary">
+                                <i class="mdi mdi-content-save mr-1"></i> Güncelle
+                            </button>
+                            <a href="@Url.Action("Index", "AdminOrder")"
+                               class="btn btn-secondary ml-2">İptal</a>
+                        </div>
+                    </form>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Sağ: Bilgi + Düzenlenebilir Alanlar -->
+    <div class="col-lg-4">
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Sipariş Bilgisi</h5>
+                <p class="mb-2">
+                    <small class="text-muted">Sipariş No</small><br>
+                    <strong style="color:#e84545;">@Model.OrderNo</strong>
+                </p>
+                <p class="mb-2">
+                    <small class="text-muted">Durum</small><br>
+                    @switch (Model.Status)
+                    {
+                        case 0:
+                            <span class="badge badge-warning">Bekliyor</span>
+                            break;
+                        case 1:
+
+                            <span class="badge badge-info">Kısmı Sevk</span>
+                            break;
+                        case 2:
+
+                            <span class="badge badge-success">Kapandı</span>
+                            break;
+                    }
+                </p>
+                <p class="mb-0">
+                    <small class="text-muted">Oluşturma</small><br>
+                    <strong>@Model.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</strong>
+                </p>
+            </div>
+        </div>
+
+        <!-- Satır Detayları -->
+        <div class="card">
+            <div class="card-body" id="rightPanelContainer">
+                <h5 class="card-title">Satır Detayları</h5>
+                @for (int i = 0; i < Model.Items.Count; i++)
+                {
+                    var item = Model.Items[i];
+
+                    @if (!item.IsClosed)
+                    {
+                        <!-- Açık satır — düzenlenebilir -->
+                    <div class="mb-3 p-2 rounded"
+         id="rightPanel_@i"  
+         style="background:#111118;border:1px solid #e84545;">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <strong style="color:#fff;font-size:13px;">@item.ProductName</strong><br>
+                                    <small class="text-muted">@item.ProductCode</small>
+                                </div>
+                                <span class="badge badge-warning">Açık</span>
+                            </div>
+
+                            <div style="font-size:12px;">
+                                <div class="form-group mb-1">
+                                    <label style="color:#666;font-size:11px;
+                                                          text-transform:uppercase;letter-spacing:1px;">
+                                        Server Adı
+                                    </label>
+                                    <input type="text" class="form-control form-control-sm"
+                                           value="@item.ServerName"
+                                           oninput="syncHidden('fn_server_@i', this.value)" />
+                                </div>
+                                <div class="form-group mb-1">
+                                    <label style="color:#666;font-size:11px;
+                                                          text-transform:uppercase;letter-spacing:1px;">
+                                        Karakter ID
+                                    </label>
+                                    <input type="text" class="form-control form-control-sm"
+                                           value="@item.CharacterId"
+                                           oninput="syncHidden('fn_charId_@i', this.value)" />
+                                </div>
+                                <div class="form-group mb-1">
+                                    <label style="color:#666;font-size:11px;
+                                                          text-transform:uppercase;letter-spacing:1px;">
+                                        Karakter Şifresi
+                                    </label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="password" class="form-control"
+                                               value="@item.CharacterPw"
+                                               id="ep_charPw_@i"
+                                               oninput="syncHidden('fn_charPw_@i', this.value)" />
+                                        <div class="input-group-append">
+                                            <button type="button"
+                                                    class="btn btn-outline-secondary"
+                                                    onclick="toggleEditPw('ep_charPw_@i', this)"
+                                                    tabindex="-1">
+                                                <i class="mdi mdi-eye"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group mb-1">
+                                    <label style="color:#666;font-size:11px;
+                                                          text-transform:uppercase;letter-spacing:1px;">
+                                        Karakter Mail
+                                    </label>
+                                    <input type="text" class="form-control form-control-sm"
+                                           value="@item.CharacterMail"
+                                           oninput="syncHidden('fn_charMail_@i', this.value)" />
+                                </div>
+                                <div class="form-group mb-1">
+                                    <label style="color:#666;font-size:11px;
+                                                          text-transform:uppercase;letter-spacing:1px;">
+                                        Mail Şifresi
+                                    </label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="password" class="form-control"
+                                               value="@item.CharacterMailPw"
+                                               id="ep_mailPw_@i"
+                                               oninput="syncHidden('fn_mailPw_@i', this.value)" />
+                                        <div class="input-group-append">
+                                            <button type="button"
+                                                    class="btn btn-outline-secondary"
+                                                    onclick="toggleEditPw('ep_mailPw_@i', this)"
+                                                    tabindex="-1">
+                                                <i class="mdi mdi-eye"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group mb-1">
+                                    <label style="color:#666;font-size:11px;
+                                                          text-transform:uppercase;letter-spacing:1px;">
+                                        OTP Kodu
+                                    </label>
+                                    <input type="text" class="form-control form-control-sm"
+                                           value="@item.OtpCode"
+                                           oninput="syncHidden('fn_otpCode_@i', this.value)" />
+                                </div>
+                                <div class="form-group mb-0">
+                                    <label style="color:#666;font-size:11px;
+                                                          text-transform:uppercase;letter-spacing:1px;">
+                                        OTP Şifresi
+                                    </label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="password" class="form-control"
+                                               value="@item.OtpPassword"
+                                               id="ep_otpPw_@i"
+                                               oninput="syncHidden('fn_otpPw_@i', this.value)" />
+                                        <div class="input-group-append">
+                                            <button type="button"
+                                                    class="btn btn-outline-secondary"
+                                                    onclick="toggleEditPw('ep_otpPw_@i', this)"
+                                                    tabindex="-1">
+                                                <i class="mdi mdi-eye"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <!-- Kapanmış satır — readonly -->
+                        <div class="mb-3 p-2 rounded"
+                             style="background:#111118;border:1px solid #28a745;">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <strong style="color:#fff;font-size:13px;">@item.ProductName</strong><br>
+                                    <small class="text-muted">@item.ServerName | @item.Quantity</small>
+                                </div>
+                                <span class="badge badge-success">Kapandı</span>
+                            </div>
+                            <div style="font-size:12px;">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span style="color:#666;">Karakter ID</span>
+                                    <span style="color:#ccc;">@item.CharacterId</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span style="color:#666;">Karakter Şifre</span>
+                                    <div class="d-flex align-items-center">
+                                        <span id="epw_@item.Id"
+                                              style="color:#ccc;font-family:monospace;">••••••</span>
+                                        <button type="button" class="btn btn-sm ml-1"
+                                                style="padding:0 4px;background:transparent;border:none;"
+                                                onclick="toggleEditSecret('epw_@item.Id', this, '@Html.Raw(item.CharacterPw)')">
+                                            <i class="mdi mdi-eye" style="color:#888;font-size:13px;"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span style="color:#666;">Mail</span>
+                                    <span style="color:#ccc;">@item.CharacterMail</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span style="color:#666;">Mail Şifre</span>
+                                    <div class="d-flex align-items-center">
+                                        <span id="emp_@item.Id"
+                                              style="color:#ccc;font-family:monospace;">••••••</span>
+                                        <button type="button" class="btn btn-sm ml-1"
+                                                style="padding:0 4px;background:transparent;border:none;"
+                                                onclick="toggleEditSecret('emp_@item.Id', this, '@Html.Raw(item.CharacterMailPw)')">
+                                            <i class="mdi mdi-eye" style="color:#888;font-size:13px;"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span style="color:#666;">OTP Kodu</span>
+                                    <span style="color:#ccc;">@item.OtpCode</span>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span style="color:#666;">OTP Şifre</span>
+                                    <div class="d-flex align-items-center">
+                                        <span id="eop_@item.Id"
+                                              style="color:#ccc;font-family:monospace;">••••••</span>
+                                        <button type="button" class="btn btn-sm ml-1"
+                                                style="padding:0 4px;background:transparent;border:none;"
+                                                onclick="toggleEditSecret('eop_@item.Id', this, '@Html.Raw(item.OtpPassword)')">
+                                            <i class="mdi mdi-eye" style="color:#888;font-size:13px;"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Satır Ekle Modal -->
+<div class="modal fade" id="addItemModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="background:#1a1a2e;border:1px solid #2a2a4a;">
+            <div class="modal-header" style="border-bottom:1px solid #2a2a4a;">
+                <h5 class="modal-title text-white">
+                    <i class="mdi mdi-plus-circle mr-1"></i> Yeni Satır Ekle
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="text-white">Ürün <span class="text-danger">*</span></label>
+                        <select id="m_ProductId" class="form-control"
+                                onchange="modalFillPrice()">
+                            <option value="">-- Ürün Seç --</option>
+                            @foreach (var p in products)
+                            {
+                                <option value="@p.Id"
+                                        data-price="@p.Price.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                        data-stock="@p.Stock"
+                                        data-name="@p.Name"
+                                        data-code="@p.Code">
+                                    @p.Name (@p.Code) — Stok: @p.Stock
+                                </option>
+                            }
+                        </select>
+                        <small id="stockInfo" class="text-muted"></small>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="text-white">Miktar <span class="text-danger">*</span></label>
+                        <input type="number" id="m_Quantity" class="form-control"
+                               min="1" value="1" onchange="modalCheckStock()" />
+                        <small id="stockWarning" class="text-danger" style="display:none;"></small>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="text-white">Birim Fiyat (₺)</label>
+                        <input type="text" id="m_UnitPrice" class="form-control"
+                               placeholder="Ürün seçince gelir"
+                               oninput="fixDecimal(this)" />
+                    </div>
+                </div>
+                <hr style="border-color:#2a2a4a;" />
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="text-white">Server Adı <span class="text-danger">*</span></label>
+                        <input type="text" id="m_ServerName" class="form-control"
+                               placeholder="Apex, Ares..." />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-white">Karakter ID <span class="text-danger">*</span></label>
+                        <input type="text" id="m_CharacterId" class="form-control" />
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="text-white">Karakter Şifresi <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input type="password" id="m_CharacterPw" class="form-control" />
+                            <div class="input-group-append">
+                                <button type="button" class="btn btn-outline-secondary"
+                                        onclick="togglePw('m_CharacterPw', this)" tabindex="-1">
+                                    <i class="mdi mdi-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-white">Karakter Mail <span class="text-danger">*</span></label>
+                        <input type="text" id="m_CharacterMail" class="form-control"
+                               placeholder="ornek@mail.com"
+                               oninput="validateCharMail(this)" />
+                        <small id="charMailError" class="text-danger" style="display:none;"></small>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="text-white">Mail Şifresi <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input type="password" id="m_CharacterMailPw" class="form-control" />
+                            <div class="input-group-append">
+                                <button type="button" class="btn btn-outline-secondary"
+                                        onclick="togglePw('m_CharacterMailPw', this)" tabindex="-1">
+                                    <i class="mdi mdi-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="text-white">OTP Kodu <span class="text-danger">*</span></label>
+                        <input type="text" id="m_OtpCode" class="form-control" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="text-white">OTP Şifresi <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input type="password" id="m_OtpPassword" class="form-control" />
+                            <div class="input-group-append">
+                                <button type="button" class="btn btn-outline-secondary"
+                                        onclick="togglePw('m_OtpPassword', this)" tabindex="-1">
+                                    <i class="mdi mdi-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <label class="text-white">
+                            ZIP Dosyası <span class="text-danger">*</span>
+                        </label>
+                        <div class="custom-file">
+                            <input type="file" class="custom-file-input" id="m_ZipFile"
+                                   accept=".zip" onchange="handleZipSelect(this)" />
+                            <label class="custom-file-label text-muted" for="m_ZipFile">
+                                Dosya seç...
+                            </label>
+                        </div>
+                        <small class="text-muted">Sadece .zip — Max 10MB</small>
+                        <div id="zipProgress" class="mt-2" style="display:none;">
+                            <div class="progress" style="height:4px;">
+                                <div class="progress-bar bg-success progress-bar-striped
+                                            progress-bar-animated" style="width:100%"></div>
+                            </div>
+                            <small class="text-muted">İşleniyor...</small>
+                        </div>
+                        <div id="zipPreview" class="mt-2"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="border-top:1px solid #2a2a4a;">
+                <button type="button" class="btn btn-secondary"
+                        data-dismiss="modal">
+                    İptal
+                </button>
+                <button type="button" class="btn btn-success"
+                        onclick="addItemFromModal()">
+                    <i class="mdi mdi-check mr-1"></i> Satırı Ekle
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/adminOrderEdit.js"></script>
+    <script>
+        var newItemIndex     = @Model.Items.Count;
+        var currentZipBase64 = null;
+        var currentZipName   = null;
+        var secretState      = {};
+                function removeEditRow(idx) {
+            var row = document.getElementById('editRow_' + idx);
+            if (row) row.remove();
+            document.querySelectorAll('[name^="Items[' + idx + ']"]')
+                    .forEach(function (el) { el.remove(); });
+            var rightPanel = document.getElementById('rightPanel_' + idx);
+            if (rightPanel) rightPanel.remove();
+            var count = document.querySelectorAll('#itemsTableBody tr').length;
+            document.getElementById('rowCount').textContent = count;
+            if (count === 0) {
+                document.getElementById('itemsTableBody').innerHTML =
+                    '<tr id="emptyRow"><td colspan="7" class="text-center text-muted py-3">' +
+                    'Henüz satır eklenmedi.</td></tr>';
+            }
+        }
+        function fixDecimal(input) {
+            input.value = input.value.replace(',', '.');
+            input.value = input.value.replace(/[^0-9.]/g, '');
+        }
+
+        // ── Sync hidden input ─────────────────────────────────────────────────
+        function syncHidden(hiddenId, value) {
+            var hidden = document.getElementById(hiddenId);
+            if (hidden) hidden.value = value;
+        }
+
+        // ── Toggle edit password ──────────────────────────────────────────────
+        function toggleEditPw(inputId, btn) {
+            var input = document.getElementById(inputId);
+            var icon  = btn.querySelector('i');
+            if (input.type === 'password') {
+                input.type     = 'text';
+                icon.className = 'mdi mdi-eye-off';
+            } else {
+                input.type     = 'password';
+                icon.className = 'mdi mdi-eye';
+            }
+        }
+
+        // ── Kapanmış satır şifre göster/gizle ────────────────────────────────
+        function toggleEditSecret(spanId, btn, value) {
+            var span = document.getElementById(spanId);
+            var icon = btn.querySelector('i');
+            if (secretState[spanId]) {
+                span.textContent    = '••••••';
+                icon.className      = 'mdi mdi-eye';
+                icon.style.color    = '#888';
+                secretState[spanId] = false;
+            } else {
+                span.textContent    = value;
+                icon.className      = 'mdi mdi-eye-off';
+                icon.style.color    = '#e84545';
+                secretState[spanId] = true;
+            }
+        }
+
+        // ── Form submit ───────────────────────────────────────────────────────
+        document.getElementById('editForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            // Index'leri 0'dan başlat
+            var allInputs = document.querySelectorAll('[name^="Items["]');
+            var indexMap  = {};
+            var newIndex  = 0;
+            allInputs.forEach(function (input) {
+                var match = input.name.match(/Items\[(\d+)\]/);
+                if (match) {
+                    var oldIdx = match[1];
+                    if (indexMap[oldIdx] === undefined) {
+                        indexMap[oldIdx] = newIndex++;
+                    }
+                    input.name = input.name.replace(
+                        'Items[' + oldIdx + ']',
+                        'Items[' + indexMap[oldIdx] + ']'
+                    );
+                }
+            });
+
+            var btn = document.getElementById('saveBtn');
+            btn.disabled  = true;
+            btn.innerHTML = '<i class="mdi mdi-loading mdi-spin mr-1"></i> Güncelleniyor...';
+            this.submit();
+        });
+    </script>
+
+}

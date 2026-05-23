@@ -1,0 +1,799 @@
+﻿@model IEnumerable<NTTAccountUI.Models.Entities.Order>
+
+@{
+    ViewData["Title"] = "Sipariş Yönetimi";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show mb-4">
+        <i class="mdi mdi-check-circle mr-2"></i> @TempData["Success"]
+        <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show mb-4">
+        <i class="mdi mdi-alert-circle mr-2"></i> @TempData["Error"]
+        <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+    </div>
+}
+
+<!-- Filtreler -->
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title mb-3">
+            <i class="mdi mdi-filter mr-1"></i> Filtrele
+        </h5>
+        <div class="row">
+            <div class="col-md-2 mb-2">
+                <input type="text" id="f_orderNo" class="form-control form-control-sm"
+                       placeholder="Sipariş No" oninput="applyFilters()" />
+            </div>
+            <div class="col-md-2 mb-2">
+                <input type="text" id="f_email" class="form-control form-control-sm"
+                       placeholder="Kullanıcı Email" oninput="applyFilters()" />
+            </div>
+            <div class="col-md-2 mb-2">
+                <input type="text" id="f_charId" class="form-control form-control-sm"
+                       placeholder="Karakter ID" oninput="applyFilters()" />
+            </div>
+            <div class="col-md-2 mb-2">
+                <input type="text" id="f_charMail" class="form-control form-control-sm"
+                       placeholder="Karakter Mail" oninput="applyFilters()" />
+            </div>
+            <div class="col-md-2 mb-2">
+                <input type="text" id="f_otpCode" class="form-control form-control-sm"
+                       placeholder="OTP Kodu" oninput="applyFilters()" />
+            </div>
+            <div class="col-md-2 mb-2">
+                <select id="f_status" class="form-control form-control-sm"
+                        onchange="applyFilters()">
+                    <option value="">Tüm Durumlar</option>
+                    <option value="0">Bekliyor</option>
+                    <option value="1">Kısmı Sevk</option>
+                    <option value="2">Kapandı</option>
+                </select>
+            </div>
+        </div>
+        <div class="d-flex justify-content-between align-items-center mt-2">
+            <small class="text-muted">
+                Toplam: <span id="totalCount">@Model.Count()</span> sipariş |
+                Gösterilen: <span id="visibleCount">@Model.Count()</span>
+            </small>
+            <button type="button" class="btn btn-outline-secondary btn-sm"
+                    onclick="clearFilters()">
+                <i class="mdi mdi-filter-remove mr-1"></i> Filtreleri Temizle
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Sipariş Listesi -->
+<div class="card">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="card-title mb-0">Sipariş Listesi</h4>
+            <a href="@Url.Action("Create", "AdminOrder")" class="btn btn-primary btn-sm">
+                <i class="mdi mdi-plus mr-1"></i> Yeni Sipariş
+            </a>
+        </div>
+
+        <div id="orderList">
+            @foreach (var order in Model)
+            {
+                var statusClass = order.Status == 0 ? "warning" : order.Status == 1 ? "info" : "success";
+                var statusText  = order.Status == 0 ? "Bekliyor" : order.Status == 1 ? "Kısmı Sevk" : "Kapandı";
+                var hasOpenItems = order.Items.Any(i => !i.IsClosed);
+
+                <div class="order-card mb-3"
+                     data-orderno="@order.OrderNo.ToLower()"
+                     data-email="@(order.UserEmail?.ToLower())"
+                     data-status="@order.Status"
+                     data-items='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                         order.Items.Select(i => new {
+                             charId   = i.CharacterId  != null ? i.CharacterId.ToLower()  : "",
+                             charMail = i.CharacterMail != null ? i.CharacterMail.ToLower() : "",
+                             otpCode  = i.OtpCode      != null ? i.OtpCode.ToLower()      : ""
+                         })))'
+                     style="border:1px solid #1e1e2e;border-radius:10px;overflow:hidden;">
+
+                    <!-- Başlık Satırı -->
+          <div class="order-header d-flex justify-content-between align-items-center px-3 py-2"
+     style="background:#1a1a2e;cursor:pointer;"
+     onclick="toggleOrder(@order.Id)">
+
+    <div class="d-flex align-items-center flex-wrap">
+        <i class="mdi mdi-chevron-right mr-2 toggle-icon"
+           id="icon_@order.Id"
+           style="transition:transform 0.2s;color:#e84545;font-size:18px;"></i>
+        <span style="color:#e84545;font-weight:700;font-size:14px;">
+            @order.OrderNo
+        </span>
+        <span class="badge badge-@statusClass ml-2">@statusText</span>
+        <small class="text-muted ml-3">
+            <i class="mdi mdi-account mr-1"></i>@order.UserEmail
+        </small>
+        <small class="text-muted ml-3">
+            <i class="mdi mdi-package-variant mr-1"></i>@order.Items.Count satır
+        </small>
+        <small class="text-muted ml-3">
+            <i class="mdi mdi-calendar mr-1"></i>
+            @order.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")
+        </small>
+    </div>
+
+    <!-- Butonlar -->
+    <div class="d-flex align-items-center">
+
+   <div class="position-relative d-inline mr-1" onclick="event.stopPropagation()">
+<button class="btn btn-sm btn-outline-secondary"
+        type="button"
+        title="Durum Değiştir"
+        onclick="event.stopPropagation(); toggleStatusMenu(this, @order.Id)">
+    <i class="mdi mdi-swap-horizontal"></i>
+</button>
+    <div class="status-menu" id="statusMenu_@order.Id"
+         style="display:none;position:absolute;right:0;top:100%;z-index:9999;
+                background:#1a1a2e;border:1px solid #2a2a4a;border-radius:6px;
+                min-width:140px;box-shadow:0 8px 24px rgba(0,0,0,0.5);margin-top:2px;">
+        @if (order.Status != 0)
+        {
+            <a href="javascript:void(0)" class="status-item"
+               style="display:block;padding:8px 14px;color:#ffc107;font-size:13px;
+                      text-decoration:none;transition:background 0.2s;"
+               onmouseover="this.style.background='#2a2a4a'"
+               onmouseout="this.style.background=''"
+               onclick="changeStatus(@order.Id, 0)">
+                <i class="mdi mdi-clock-outline mr-1"></i> Bekliyor
+            </a>
+        }
+        @if (order.Status != 1)
+        {
+            <a href="javascript:void(0)" class="status-item"
+               style="display:block;padding:8px 14px;color:#17a2b8;font-size:13px;
+                      text-decoration:none;transition:background 0.2s;"
+               onmouseover="this.style.background='#2a2a4a'"
+               onmouseout="this.style.background=''"
+               onclick="changeStatus(@order.Id, 1)">
+                <i class="mdi mdi-truck-delivery mr-1"></i> Kısmı Sevk
+            </a>
+        }
+        @if (order.Status != 2)
+        {
+            <a href="javascript:void(0)" class="status-item"
+               style="display:block;padding:8px 14px;color:#28a745;font-size:13px;
+                      text-decoration:none;transition:background 0.2s;"
+               onmouseover="this.style.background='#2a2a4a'"
+               onmouseout="this.style.background=''"
+               onclick="changeStatus(@order.Id, 2)">
+                <i class="mdi mdi-check-all mr-1"></i> Kapandı
+            </a>
+        }<!-- Satır Düzenle — her zaman görünsün (Kapandı hariç) -->
+@if (order.Status != 2 && order.Items.Any())
+{
+    <button type="button" class="btn btn-sm mr-1"
+            title="Satırları Düzenle"
+            style="background:linear-gradient(135deg,#e84545,#c62a88);
+                   color:#fff;border:none;border-radius:6px;"
+            onclick="event.stopPropagation(); openPartialClose(@order.Id, '@order.OrderNo')">
+        <i class="mdi mdi-package-variant mr-1"></i> Sevk
+    </button>
+}
+    </div>
+</div>
+
+        <!-- Tümünü Kapat -->
+        @if (hasOpenItems)
+        {
+            <form asp-action="CloseAllItems" asp-controller="AdminOrder"
+                  method="post" class="d-inline"
+                  id="closeAllForm_@order.Id"
+                  onclick="event.stopPropagation()">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="orderId" value="@order.Id" />
+                <button type="button" class="btn btn-sm btn-success mr-1"
+                        title="Tümünü Kapat"
+                        onclick="confirmCloseAll(@order.Id, '@order.OrderNo')">
+                    <i class="mdi mdi-check-all"></i>
+                </button>
+            </form>
+
+     
+        }
+
+        <!-- Tümünü İndir -->
+        @if (order.Items.Any(i => !string.IsNullOrEmpty(i.ZipFile)))
+        {
+            <a href="@Url.Action("AdminDownloadAll", "AdminOrder", new { orderId = order.Id })"
+               class="btn btn-sm btn-outline-info mr-1"
+               title="Tümünü İndir"
+               onclick="event.stopPropagation()">
+                <i class="mdi mdi-download-multiple"></i>
+            </a>
+        }
+
+        <!-- Düzenle — Bekliyor ve Kısmı Sevk'te -->
+        @if (order.Status != 2)
+        {
+            <a href="@Url.Action("Edit", "AdminOrder", new { id = order.Id })"
+               class="btn btn-sm btn-warning mr-1"
+               title="Düzenle"
+               onclick="event.stopPropagation()">
+                <i class="mdi mdi-pencil"></i>
+            </a>
+        }
+
+        <!-- Sil — sadece Bekliyor -->
+        @if (order.Status == 0)
+        {
+            <button type="button" class="btn btn-sm btn-danger"
+                    title="Sil"
+                    onclick="event.stopPropagation(); confirmDelete(@order.Id, '@order.OrderNo')">
+                <i class="mdi mdi-delete"></i>
+            </button>
+        }
+    </div>
+</div>
+
+                    <!-- Detay (Gizli) -->
+                    <div id="detail_@order.Id" style="display:none;">
+
+                        @if (!string.IsNullOrEmpty(order.Note))
+                        {
+                            <div class="px-3 py-2"
+                                 style="background:#0d0d1a;border-bottom:1px solid #1e1e2e;">
+                                <small style="color:#666;">
+                                    <i class="mdi mdi-note-text mr-1"></i> @order.Note
+                                </small>
+                            </div>
+                        }
+
+                        @if (!order.Items.Any())
+                        {
+                            <div class="text-center text-muted py-3">Satır bulunamadı.</div>
+                        }
+                        else
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-sm mb-0" style="font-size:13px;">
+                                    <thead style="background:#111118;">
+                                        <tr>
+                                            <th style="color:#888;">Ürün</th>
+                                            <th style="color:#888;">Server</th>
+                                            <th style="color:#888;">Miktar</th>
+                                            <th style="color:#888;">Fiyat</th>
+                                            <th style="color:#888;">Karakter ID</th>
+                                            <th style="color:#888;">Karakter Şifresi</th>
+                                            <th style="color:#888;">Karakter Mail</th>
+                                            <th style="color:#888;">Mail Şifresi</th>
+                                            <th style="color:#888;">OTP Kodu</th>
+                                            <th style="color:#888;">OTP Şifresi</th>
+                                            <th style="color:#888;">Durum</th>
+                                            <th style="color:#888;">ZIP</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var item in order.Items)
+                                        {
+                                            <tr style="border-bottom:1px solid #1a1a2e;
+                                                       @(item.IsClosed ? "background:rgba(40,167,69,0.05);" : "")">
+                                                <td>
+                                                    <strong style="color:#fff;">@item.ProductName</strong><br>
+                                                    <small class="text-muted">@item.ProductCode</small>
+                                                </td>
+                                                <td style="color:#ccc;">@item.ServerName</td>
+                                                <td style="color:#ccc;">@item.Quantity</td>
+                                                <td style="color:#e84545;font-weight:600;">
+                                                    @item.UnitPrice.ToString("N2") ₺
+                                                </td>
+                                                <td style="color:#ccc;">@item.CharacterId</td>
+
+                                                <!-- Karakter Şifresi -->
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <span id="cpw_@item.Id"
+                                                              style="color:#ccc;font-family:monospace;
+                                                                     letter-spacing:2px;">
+                                                            ••••••••
+                                                        </span>
+                                                        <button type="button" class="btn btn-sm ml-1"
+                                                                style="padding:1px 5px;background:transparent;border:none;"
+                                                                onclick="toggleSecret('cpw_@item.Id', this, '@Html.Raw(item.CharacterPw)')">
+                                                            <i class="mdi mdi-eye" style="color:#888;"></i>
+                                                        </button>
+                                                    </div>
+                                                </td>
+
+                                                <td style="color:#ccc;">@item.CharacterMail</td>
+
+                                                <!-- Mail Şifresi -->
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <span id="mpw_@item.Id"
+                                                              style="color:#ccc;font-family:monospace;
+                                                                     letter-spacing:2px;">
+                                                            ••••••••
+                                                        </span>
+                                                        <button type="button" class="btn btn-sm ml-1"
+                                                                style="padding:1px 5px;background:transparent;border:none;"
+                                                                onclick="toggleSecret('mpw_@item.Id', this, '@Html.Raw(item.CharacterMailPw)')">
+                                                            <i class="mdi mdi-eye" style="color:#888;"></i>
+                                                        </button>
+                                                    </div>
+                                                </td>
+
+                                                <td style="color:#ccc;">@item.OtpCode</td>
+
+                                                <!-- OTP Şifresi -->
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <span id="opw_@item.Id"
+                                                              style="color:#ccc;font-family:monospace;
+                                                                     letter-spacing:2px;">
+                                                            ••••••••
+                                                        </span>
+                                                        <button type="button" class="btn btn-sm ml-1"
+                                                                style="padding:1px 5px;background:transparent;border:none;"
+                                                                onclick="toggleSecret('opw_@item.Id', this, '@Html.Raw(item.OtpPassword)')">
+                                                            <i class="mdi mdi-eye" style="color:#888;"></i>
+                                                        </button>
+                                                    </div>
+                                                </td>
+
+                                                <td>
+                                                    @if (item.IsClosed)
+                                                    {
+                                                        <span class="badge badge-success">Kapandı</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge badge-warning">Bekliyor</span>
+                                                    }
+                                                </td>
+
+                                                <!-- ZIP -->
+                                                <td>
+                                                    @if (!string.IsNullOrEmpty(item.ZipFile))
+                                                    {
+                                                        <a href="@Url.Action("AdminDownloadZip", "AdminOrder", new { itemId = item.Id, orderId = order.Id })"
+                                                           class="btn btn-sm btn-outline-info"
+                                                           title="ZIP İndir">
+                                                            <i class="mdi mdi-download"></i>
+                                                        </a>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="text-muted">—</span>
+                                                    }
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            @if (!Model.Any())
+            {
+                <div class="text-center text-muted py-5">
+                    <i class="mdi mdi-clipboard-list mdi-48px d-block mb-2"></i>
+                    Henüz sipariş bulunmamaktadır.
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Silme Formu -->
+<form id="deleteForm" asp-action="Delete" asp-controller="AdminOrder" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="id" id="deleteId" />
+</form>
+
+<!-- Kısmı Kapat Modal -->
+<div class="modal fade" id="partialCloseModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content" style="background:#1a1a2e;border:1px solid #2a2a4a;">
+            <div class="modal-header" style="border-bottom:1px solid #2a2a4a;">
+                <h5 class="modal-title text-white">
+                    <i class="mdi mdi-check mr-1"></i>
+                    Kısmı Kapat —
+                    <span id="partialOrderNo" style="color:#e84545;"></span>
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted mb-3">Kapatmak istediğiniz satırları seçin:</p>
+                <div id="partialCloseList"></div>
+            </div>
+            <div class="modal-footer" style="border-top:1px solid #2a2a4a;">
+                <button type="button" class="btn btn-secondary"
+                        data-dismiss="modal">İptal</button>
+                <button type="button" class="btn btn-success"
+                        onclick="submitPartialClose()">
+                    <i class="mdi mdi-check mr-1"></i> Seçilileri Kapat
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Kısmı Kapat Form -->
+<form id="partialCloseForm" asp-action="ToggleItems"
+      asp-controller="AdminOrder" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="orderId" id="partialOrderId" />
+    <div id="partialItemInputs"></div>
+</form>
+<!-- Durum Değiştir Formu -->
+<form id="changeStatusForm" asp-action="ChangeStatus"
+      asp-controller="AdminOrder" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="orderId" id="statusOrderId" />
+    <input type="hidden" name="status" id="statusValue" />
+</form>
+@section Scripts {
+<script>
+    // ── Veri tanımlamaları ────────────────────────────────────────────────
+    var orderData = {};
+    @foreach (var order in Model)
+    {
+        var openItems = order.Items.Where(i => !i.IsClosed).Select(i => new {
+            id          = i.Id,
+            productName = i.ProductName,
+            productCode = i.ProductCode,
+            serverName  = i.ServerName,
+            quantity    = i.Quantity
+        });
+        @:orderData[@order.Id] = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+            new { items = openItems }
+        ));
+    }
+
+    var allOrderItems = {};
+    @foreach (var order in Model)
+    {
+        var allItems = order.Items.Select(i => new {
+            id          = i.Id,
+            productName = i.ProductName,
+            productCode = i.ProductCode,
+            serverName  = i.ServerName,
+            characterId = i.CharacterId,
+            quantity    = i.Quantity,
+            isClosed    = i.IsClosed
+        });
+        @:allOrderItems[@order.Id] = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(allItems));
+    }
+
+    var pendingStatusOrderId = null;
+    var pendingStatusValue   = null;
+
+    // ── Durum değiştir ────────────────────────────────────────────────────
+   function changeStatus(orderId, status) {
+    status = parseInt(status); // ✅ string gelirse int'e çevir
+    if (status === 1) {
+        var data  = orderData[orderId];
+        var items = data ? data.items : [];
+        if (!items || items.length === 0) {
+            Swal.fire({
+                title: 'Uyarı!',
+                text: 'Kapatılacak açık satır bulunamadı.',
+                icon: 'warning',
+                confirmButtonColor: '#e84545',
+                background: '#1a1a2e',
+                color: '#fff'
+            });
+            return;
+        } openPartialClose(orderId, 'Kısmı Sevk');
+        return;
+        // Sipariş no'yu bul
+        var card    = document.querySelector('.order-card[data-orderno]');
+        var orderNo = 'Kısmı Sevk';
+        openPartialClose(orderId, orderNo);
+        return;
+    }
+
+    var statusLabels = { 0: 'Bekliyor', 2: 'Kapandı' };
+    Swal.fire({
+        title: 'Durum Değiştir',
+        html: 'Sipariş durumu <b>' + statusLabels[status] + '</b> olarak değiştirilecek.<br>' +
+              (status === 0
+                ? '<small class="text-muted">Tüm satırlar açılacak.</small>'
+                : '<small class="text-muted">Tüm satırlar kapatılacak.</small>'),
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Evet, Değiştir',
+        cancelButtonText: 'İptal',
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#444',
+        background: '#1a1a2e',
+        color: '#fff'
+    }).then(function (r) {
+        if (r.isConfirmed) {
+            document.getElementById('statusOrderId').value = orderId;
+            document.getElementById('statusValue').value   = status;
+            document.getElementById('changeStatusForm').submit();
+        }
+    });
+}
+    // ── Status menü toggle ────────────────────────────────────────────────
+function toggleStatusMenu(btn, orderId) {
+    event.stopPropagation(); // ✅ click event'in yukarı çıkmasını engelle
+    var menu     = document.getElementById('statusMenu_' + orderId);
+    var allMenus = document.querySelectorAll('.status-menu');
+    allMenus.forEach(function (m) {
+        if (m.id !== 'statusMenu_' + orderId) m.style.display = 'none';
+    });
+    menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+}
+
+document.addEventListener('click', function (e) {
+    // Status menü içine tıklandıysa kapatma
+    if (e.target.closest('.status-menu') || e.target.closest('[onclick*="toggleStatusMenu"]')) return;
+    document.querySelectorAll('.status-menu').forEach(function (m) {
+        m.style.display = 'none';
+    });
+});
+    // ── Accordion toggle ──────────────────────────────────────────────────
+    function toggleOrder(id) {
+        var detail = document.getElementById('detail_' + id);
+        var icon   = document.getElementById('icon_' + id);
+        if (detail.style.display === 'none') {
+            detail.style.display = 'block';
+            icon.style.transform = 'rotate(90deg)';
+        } else {
+            detail.style.display = 'none';
+            icon.style.transform = 'rotate(0deg)';
+        }
+    }
+
+    // ── Şifre göster/gizle ───────────────────────────────────────────────
+    var secretState = {};
+    function toggleSecret(spanId, btn, value) {
+        var span = document.getElementById(spanId);
+        var icon = btn.querySelector('i');
+        if (secretState[spanId]) {
+            span.textContent    = '••••••••';
+            icon.className      = 'mdi mdi-eye';
+            icon.style.color    = '#888';
+            secretState[spanId] = false;
+        } else {
+            span.textContent    = value;
+            icon.className      = 'mdi mdi-eye-off';
+            icon.style.color    = '#e84545';
+            secretState[spanId] = true;
+        }
+    }
+
+    // ── Filtrele ─────────────────────────────────────────────────────────
+    function applyFilters() {
+        var fOrderNo  = document.getElementById('f_orderNo').value.trim().toLowerCase();
+        var fEmail    = document.getElementById('f_email').value.trim().toLowerCase();
+        var fCharId   = document.getElementById('f_charId').value.trim().toLowerCase();
+        var fCharMail = document.getElementById('f_charMail').value.trim().toLowerCase();
+        var fOtpCode  = document.getElementById('f_otpCode').value.trim().toLowerCase();
+        var fStatus   = document.getElementById('f_status').value;
+
+        var cards   = document.querySelectorAll('.order-card');
+        var visible = 0;
+
+        cards.forEach(function (card) {
+            var orderNo = card.dataset.orderno || '';
+            var email   = card.dataset.email   || '';
+            var status  = card.dataset.status  || '';
+            var items   = [];
+            try { items = JSON.parse(card.dataset.items || '[]'); } catch (e) {}
+
+            var matchOrderNo  = !fOrderNo  || orderNo.includes(fOrderNo);
+            var matchEmail    = !fEmail    || email.includes(fEmail);
+            var matchStatus   = !fStatus   || status === fStatus;
+            var matchCharId   = !fCharId   || items.some(function (i) {
+                return (i.charId || '').includes(fCharId);
+            });
+            var matchCharMail = !fCharMail || items.some(function (i) {
+                return (i.charMail || '').includes(fCharMail);
+            });
+            var matchOtpCode  = !fOtpCode  || items.some(function (i) {
+                return (i.otpCode || '').includes(fOtpCode);
+            });
+
+            var show = matchOrderNo && matchEmail && matchStatus &&
+                       matchCharId && matchCharMail && matchOtpCode;
+
+            card.style.display = show ? 'block' : 'none';
+            if (show) visible++;
+        });
+
+        document.getElementById('visibleCount').textContent = visible;
+    }
+
+    function clearFilters() {
+        ['f_orderNo','f_email','f_charId','f_charMail','f_otpCode'].forEach(function (id) {
+            document.getElementById(id).value = '';
+        });
+        document.getElementById('f_status').value = '';
+        applyFilters();
+    }
+
+    // ── Tümünü Kapat ─────────────────────────────────────────────────────
+    function confirmCloseAll(orderId, orderNo) {
+        Swal.fire({
+            title: 'Tümünü Kapat',
+            html: '<b>' + orderNo + '</b> siparişindeki tüm açık satırlar kapatılacak.<br>' +
+                  '<small class="text-muted">Bu işlem geri alınamaz.</small>',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Evet, Tümünü Kapat',
+            cancelButtonText: 'İptal',
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#444',
+            background: '#1a1a2e',
+            color: '#fff'
+        }).then(function (r) {
+            if (r.isConfirmed) {
+                document.getElementById('closeAllForm_' + orderId).submit();
+            }
+        });
+    }
+
+    // ── Kısmı Kapat (normal) ──────────────────────────────────────────────
+    function openPartialClose(orderId, orderNo) {
+        document.getElementById('partialOrderNo').textContent = orderNo;
+        document.getElementById('partialOrderId').value = orderId;
+
+        var list  = document.getElementById('partialCloseList');
+        list.innerHTML = '';
+
+        var data  = orderData[orderId];
+        var items = data ? data.items : [];
+
+        if (!items || items.length === 0) {
+            list.innerHTML = '<p class="text-muted text-center py-3">Açık satır bulunamadı.</p>';
+        } else {
+            items.forEach(function (item) {
+                var div = buildItemRow(item, false);
+                list.appendChild(div);
+            });
+        }
+
+        $('#partialCloseModal').modal('show');
+    }
+
+    // ── Kısmı Sevk — tüm satırları göster ────────────────────────────────
+    function openPartialCloseForStatus(orderId) {
+        document.getElementById('partialOrderNo').textContent = 'Kısmı Sevk — Satır Durumlarını Düzenle';
+        document.getElementById('partialOrderId').value = orderId;
+
+        var list     = document.getElementById('partialCloseList');
+        list.innerHTML = '';
+
+        var allItems = allOrderItems[orderId] || [];
+
+        if (!allItems || allItems.length === 0) {
+            list.innerHTML = '<p class="text-muted text-center py-3">Satır bulunamadı.</p>';
+        } else {
+            allItems.forEach(function (item) {
+                var div = buildItemRow(item, true);
+                list.appendChild(div);
+            });
+        }
+
+        $('#partialCloseModal').modal('show');
+    }
+
+    // ── Satır div oluştur ─────────────────────────────────────────────────
+    function buildItemRow(item, showClosedState) {
+        var isClosed = item.isClosed || false;
+        var div = document.createElement('div');
+        div.className = 'mb-2 p-3 rounded d-flex align-items-center';
+        div.style.cssText =
+            'background:#111118;border:1px solid ' +
+            (isClosed ? '#28a745' : '#1e1e2e') +
+            ';cursor:pointer;transition:border-color 0.2s;';
+
+        var hint = '';
+        if (showClosedState) {
+            hint = '<small style="color:#666;font-size:11px;display:block;margin-top:4px;">' +
+                   (isClosed ? '✅ Seçersen geri açılır' : '⬜ Seçersen kapanır') +
+                   '</small>';
+        }
+
+        div.innerHTML =
+            '<input type="checkbox" id="chk_' + item.id + '" value="' + item.id + '" ' +
+            'class="partial-chk mr-3" style="width:16px;height:16px;cursor:pointer;" />' +
+            '<label for="chk_' + item.id + '" style="cursor:pointer;margin:0;flex:1;">' +
+            '<strong style="color:#fff;">' + item.productName + '</strong>' +
+            '<span class="badge badge-warning ml-2">' + item.productCode + '</span>' +
+            (showClosedState
+                ? (isClosed
+                    ? '<span class="badge badge-success ml-1">Kapandı</span>'
+                    : '<span class="badge badge-warning ml-1">Açık</span>')
+                : '') +
+            '<br>' +
+            '<small style="color:#666;">Server: ' + item.serverName +
+            (item.characterId ? ' | Karakter: ' + item.characterId : '') +
+            ' | Miktar: ' + item.quantity + '</small>' +
+            hint +
+            '</label>';
+
+        div.addEventListener('click', function (e) {
+            if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'LABEL') {
+                var chk = this.querySelector('input');
+                chk.checked = !chk.checked;
+                this.style.borderColor = chk.checked
+                    ? '#e84545'
+                    : (isClosed ? '#28a745' : '#1e1e2e');
+            }
+        });
+
+        div.querySelector('input').addEventListener('change', function () {
+            div.style.borderColor = this.checked
+                ? '#e84545'
+                : (isClosed ? '#28a745' : '#1e1e2e');
+        });
+
+        return div;
+    }
+
+    // ── Seçilileri Gönder ─────────────────────────────────────────────────
+    function submitPartialClose() {
+        var checked = document.querySelectorAll('.partial-chk:checked');
+        if (checked.length === 0) {
+            Swal.fire({
+                title: 'Uyarı!',
+                text: 'En az bir satır seçmelisiniz.',
+                icon: 'warning',
+                confirmButtonColor: '#e84545',
+                background: '#1a1a2e',
+                color: '#fff'
+            });
+            return;
+        }
+
+        var container = document.getElementById('partialItemInputs');
+        container.innerHTML = '';
+        checked.forEach(function (chk) {
+            var input   = document.createElement('input');
+            input.type  = 'hidden';
+            input.name  = 'itemIds';
+            input.value = chk.value;
+            container.appendChild(input);
+        });
+
+        pendingStatusOrderId = null;
+        pendingStatusValue   = null;
+
+        $('#partialCloseModal').modal('hide');
+        document.getElementById('partialCloseForm').submit();
+    }
+
+    // ── Sil ──────────────────────────────────────────────────────────────
+    function confirmDelete(id, orderNo) {
+        Swal.fire({
+            title: 'Siparişi Sil',
+            html: '<b>' + orderNo + '</b> siparişini silmek istediğinize emin misiniz?<br>' +
+                  '<small class="text-muted">Stok iade edilecektir.</small>',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Evet, Sil',
+            cancelButtonText: 'İptal',
+            confirmButtonColor: '#e84545',
+            cancelButtonColor: '#444',
+            background: '#1a1a2e',
+            color: '#fff'
+        }).then(function (result) {
+            if (result.isConfirmed) {
+                document.getElementById('deleteId').value = id;
+                document.getElementById('deleteForm').submit();
+            }
+        });
+    }
+</script>
+}

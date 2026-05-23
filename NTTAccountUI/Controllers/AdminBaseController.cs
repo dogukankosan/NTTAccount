@@ -9,7 +9,7 @@ public abstract class AdminBaseController : Controller
 {
     private readonly ISiteSettingsRepository _siteSettingsRepository;
     private readonly IContactRepository _contactRepository;
-    private readonly IUserRepository _userRepository;
+    public readonly IUserRepository _userRepository;
 
     protected AdminBaseController(
         ISiteSettingsRepository siteSettingsRepository,
@@ -22,7 +22,7 @@ public abstract class AdminBaseController : Controller
     }
     public override async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
-        SiteSettings settings = await _siteSettingsRepository.GetAsync();
+        SiteSettings? settings = await _siteSettingsRepository.GetAsync();
         if (settings != null)
         {
             ViewBag.SiteName = settings.SiteName;
