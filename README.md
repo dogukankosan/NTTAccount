@@ -10,7 +10,8 @@
 > **NTTAccountUI**, Knight Online private server hesap yönetimi için geliştirilmiş, ASP.NET Core MVC tabanlı tam kapsamlı bir web uygulamasıdır. Kullanıcı tarafında modern bir vitrin sunarken, arka planda güçlü bir admin paneli ile site yönetimini tek çatı altında toplar.
 
 ---
-<img width="1649" height="907" alt="1" src="https://github.com/user-attachments/assets/02c912a8-220c-4246-89bf-716659a0e276" />
+<img width="1600" height="775" alt="35051906-965a-4836-927e-c618ff643676" src="https://github.com/user-attachments/assets/3cad3942-c5b9-4615-88f4-5c3a3d94b0e3" />
+
 
 ## 🚀 Özellikler
 
