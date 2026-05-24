@@ -1,5 +1,4 @@
 
-
 # 🗡️ NTTAccountUI
 
 ![License](https://img.shields.io/github/license/dogukankosan/NTTAccountUI)
@@ -26,6 +25,11 @@
 - ⚙️ Site ayarları (logo, ikon, sosyal medya linkleri — base64 DB'de)
 - 👤 Kullanıcı yönetimi (lockout, şifre hash, profil resmi)
 - 📋 Sistem log yönetimi (Info / Error / Critical)
+- 🛒 Sipariş yönetimi (CRUD, durum takibi, satır bazlı kapatma/açma)
+- 📦 Ürün yönetimi (stok, kod tekrar kontrolü, sipariş bağlantı koruması)
+- 📊 Raporlama paneli (gelir, sipariş, ürün ve kullanıcı istatistikleri)
+- 📥 ZIP indirme (tekli ve toplu, bilgi TXT ile birlikte paketli)
+- 👁️ Kullanıcı sipariş paneli (sadece teslim edilmiş satırlar indirilebilir)
 - ❄️ Kullanıcı arayüzü (kar efekti, çerez banner, OG/Twitter meta tag)
 - 🌐 Dinamik footer (WhatsApp, Telegram, Discord, Facebook, YouTube)
 - 🛠️ Global exception middleware → otomatik log + yönlendirme
@@ -46,6 +50,10 @@ NTTAccountUI/
 │   ├── AdminLogController.cs           # Sistem logları
 │   ├── AdminBannerSlideController.cs   # Banner/slide yönetimi
 │   ├── AdminHomeController.cs          # Admin dashboard
+│   ├── AdminOrderController.cs         # Sipariş yönetimi (CRUD, durum, ZIP indirme, satır toggle)
+│   ├── AdminProductController.cs       # Ürün yönetimi (stok, kod kontrolü, sipariş koruması)
+│   ├── AdminReportController.cs        # Raporlama (gelir, sipariş, ürün, kullanıcı istatistikleri)
+│   ├── OrderController.cs              # Kullanıcı sipariş paneli (görüntüleme, ZIP indirme)
 │   ├── ContactController.cs            # Kullanıcı iletişim formu + bildirim maili
 │   ├── NewsController.cs               # Haber sayfası
 │   └── UserBaseController.cs           # Kullanıcı tarafı base controller
@@ -59,7 +67,9 @@ NTTAccountUI/
 │       ├── ContactRepository.cs        # İletişim mesajları + spam kontrolü
 │       ├── MailSettingsRepository.cs   # Mail ayarları
 │       ├── SiteSettingsRepository.cs   # Site ayarları
-│       └── LogRepository.cs            # Sistem logları
+│       ├── LogRepository.cs            # Sistem logları
+│       ├── OrderRepository.cs          # Sipariş + satır CRUD, durum yönetimi
+│       └── ProductRepository.cs        # Ürün CRUD, stok, kod ve sipariş kontrolü
 ├── Business/
 │   └── Validators/
 │       ├── AdminLoginValidator.cs      # Email & şifre doğrulama
@@ -107,7 +117,7 @@ NTTAccountUI/
 
 3. **Veritabanını Hazırla:**
    - SQL Server üzerinde gerekli tabloları oluştur:
-     `Users`, `AdminSessions`, `Contacts`, `SiteSettings`, `MailSettings`, `Logs`, `BannerSlides`, `News`
+     `Users`, `AdminSessions`, `Contacts`, `SiteSettings`, `MailSettings`, `Logs`, `BannerSlides`, `News`, `Orders`, `OrderItems`, `Products`
 
 4. **Projeyi Çalıştır:**
    ```bash
@@ -126,9 +136,12 @@ NTTAccountUI/
 1. Uygulamayı başlat, `/AdminLogin` üzerinden giriş yap.
 2. Admin panelinde site ayarlarını, logo ve sosyal medya linklerini düzenle.
 3. Mail ayarlarına git → SMTP bilgilerini gir → **önce test maili gönder**, sonra kaydet.
-4. İletişim formundan gelen mesajları `/AdminContact` üzerinden yönet.
-5. Kullanıcı tarafı vitrin otomatik olarak DB'deki ayarları yansıtır (site adı, footer, meta tag'ler).
-6. Sistem loglarını `/AdminLog` üzerinden takip et.
+4. Ürünleri `/AdminProduct` üzerinden ekle (kod, stok, fiyat).
+5. Yeni sipariş oluştur → her satıra ZIP dosyası ekle → karakter/mail/OTP bilgileri AES-256 ile şifrelenir.
+6. Sipariş satırlarını teslim ettikçe `/AdminOrder` üzerinden kapat; kullanıcı tarafında indirme aktif olur.
+7. İletişim formundan gelen mesajları `/AdminContact` üzerinden yönet.
+8. Kullanıcı tarafı vitrin otomatik olarak DB'deki ayarları yansıtır (site adı, footer, meta tag'ler).
+9. Sistem loglarını `/AdminLog`, gelir ve sipariş istatistiklerini `/AdminReport` üzerinden takip et.
 
 ---
 
@@ -144,6 +157,7 @@ NTTAccountUI/
 | Spam | IP + telefon bazlı spam kontrolü, honeypot alanı |
 | XSS | `InputSanitizer` ile form alanı temizleme |
 | CSRF | `ValidateAntiForgeryToken` tüm POST action'larında |
+| Hassas veri | Karakter şifresi, mail şifresi, OTP → AES-256 şifreli DB'de |
 | Hata | Global exception middleware → log + kullanıcı dostu yönlendirme |
 
 ---
